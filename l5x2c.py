@@ -22,125 +22,73 @@
 # SOFTWARE.
 ################################################################################
 import sys
-import json
 import argparse
-from xml.dom.minidom import parse
+import traceback
+from l5xparser import parse_l5x
 
 
 ####################################################
 #
-# CONSTRUCTS FOR THE 'LIST' OPTION
+# ADDS THE HEADER TO THE C FILE
 #
 ###################################################
-
-constructs = ['tags', 'programs', 'routines', 'rungs']
-
-
-####################################################
-#
-# PARSE XML FILE USING DOM
-# obs: avoids parsing again if already parsed
-###################################################
-old_filename = None
-old_dom = None
-def parse_xml(filename):
-    global old_filename
-    global old_dom
-    if filename == old_filename:
-        return old_dom
-    else:
-        old_filename = filename
-        old_dom = parse(filename)
-        return old_dom
-
+def addHeader(f):
+    f.write("/* This file was generated automatically by l5x2c */\n")
+    f.write("/*     https://github.com/alairjunior/l5x2c       */\n")
+    f.write("#include <assert.h>\n\n")
 
 ####################################################
 #
-# RETURNS THE LIST OF PROGRAMS IN THE L5X FILE
+# PROCESSES THE RUNGS
 #
 ###################################################
-def list_programs(args):
-    dom = parse_xml(args.file)
-    program_list = []
-    for programs in dom.getElementsByTagName("Programs"):
-        for program in programs.getElementsByTagName("Program"):
-            program_list.append(program.getAttribute("Name"))
-    
-    return program_list
+def processRungs(f, routine):
+    for rung in routine:
+        f.write("    //%s\n" % (rung))
     
 ####################################################
 #
-# RETURNS THE LIST OF ROUTINES IN THE PROGRAM
+# ADDS ROUTINE FUNCTION TO THE C FILE
 #
 ###################################################
-def list_routines(args):
-    program_name = args.program
-    if (program_name is None):
-        raise Exception("Define the working program to list the routines")
-    
-    dom = parse_xml(args.file)
-    routine_list = []
-    for programs in dom.getElementsByTagName("Programs"):
-        for program in programs.getElementsByTagName("Program"):
-            if (program.getAttribute("Name") == program_name):
-                for routines in program.getElementsByTagName("Routines"):
-                    for routine in routines.getElementsByTagName("Routine"):
-                        routine_list.append(routine.getAttribute("Name"))
-    
-    return routine_list
+def addFunction(f, program, routine, l5x):
+    f.write("/* Function for Routine %s of program %s */\n" % (program,routine))
+    f.write("void %s_%s() {\n" % (program,routine))
+    processRungs(f,l5x[program][routine]['rungs'])
+    f.write("}\n\n")
+
 
 ####################################################
 #
-# RETURNS THE LIST OF RUNGS IN THE ROUTINE
+# TRANSLATES THE DICTIONARY TO A C FILE
 #
 ###################################################
-def list_rungs(args):
-    program_name = args.program
-    if (program_name is None):
-        raise Exception("Define the working program to list the rungs")
-    
-    routine_name = args.routine
-    if (routine_name is None):
-        raise Exception("Define the working routine to list the rungs")
-    
-    dom = parse_xml(args.file)
-    rung_list = []
-    for programs in dom.getElementsByTagName("Programs"):
-        for program in programs.getElementsByTagName("Program"):
-            if (program.getAttribute("Name") == program_name):
-                for routines in program.getElementsByTagName("Routines"):
-                    for routine in routines.getElementsByTagName("Routine"):
-                        if (routine.getAttribute("Name") == routine_name):
-                            for rll in routine.getElementsByTagName("RLLContent"):
-                                for rung in rll.getElementsByTagName("Rung"):
-                                    for text in rung.getElementsByTagName("Text"):
-                                        rung_list.append(text.firstChild.wholeText.strip())
-    
-    return rung_list
+def dict2c(l5x, output):
+    with open(output, 'w') as f:
+        addHeader(f)
+        for program in l5x:
+            for routine in l5x[program]:
+                addFunction(f, program, routine, l5x)
+        
 
 ####################################################
 #
-# MAIN SCRIPT
+# MAIN SCRIPT FOR COMMAND LINE OPTIONS
 #
 ###################################################
 def main():
     description = "Converts a Rockwell's L5X file into a C program"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("file")
-    parser.add_argument('-p', '--program', help="define the working program")
-    parser.add_argument('-r', '--routine', help="define the working program")
-    parser.add_argument('-L', '--list', dest='construct',
-                            help='print the selected program constructs',
-                            choices=constructs)
-  
-    args = parser.parse_args()
+    parser.add_argument("input")
+    parser.add_argument("output")
     
-    if (args.construct):
-        try:
-            print globals()["list_"+args.construct](args)
-        except Exception as e:
-            print e.message
-    
+    args = vars(parser.parse_args())
+    try:
+        l5x_data = parse_l5x(args['input'])
+        dict2c(l5x_data, args['output'])
+    except Exception as e:
+        print e.message
+        traceback.print_exc()
   
 if __name__== "__main__":
     main()
