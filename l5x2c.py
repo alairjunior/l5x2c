@@ -20,12 +20,16 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+#
+#
+# This file is part of l5x2c. To know more about it, acccess:
+#    https://github.com/alairjunior/l5x2c
+#
 ################################################################################
 import sys
 import argparse
 import traceback
 from l5xparser import parse_l5x
-
 
 ####################################################
 #
@@ -75,7 +79,7 @@ def dict2c(l5x, output):
 
 ####################################################
 #
-# MAIN SCRIPT FOR COMMAND LINE OPTIONS
+# MAIN SCRIPT FOR COMMAND LINE EXECUTION
 #
 ###################################################
 def main():
