@@ -127,14 +127,19 @@ def parse_l5x(filename):
     l5x_data = {}
     args = {}
     args['filename'] = filename
-    for program in list_programs(args):
-        args['program'] = program
-        l5x_data[program] = {}
-        program_data = l5x_data[program]
-        for routine in list_routines(args):
-            args['routine'] = routine
-            program_data[routine] = {}
-            program_data[routine]['rungs'] = list_rungs(args)
+    l5x_data['programs'] = {}
+    for program_name in list_programs(args):
+        args['program'] = program_name
+        programs = l5x_data['programs']
+        programs[program_name] = {}
+        program = programs[program_name]
+        program['routines'] = {}
+        for routine_name in list_routines(args):
+            args['routine'] = routine_name
+            routines = program['routines']
+            routines[routine_name] = {}
+            routine = routines[routine_name]
+            routine['rungs'] = list_rungs(args)
     return l5x_data
     
 

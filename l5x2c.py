@@ -45,16 +45,16 @@ def addHeader(f):
 def processRungs(f, routine):
     for rung in routine:
         f.write("    //%s\n" % (rung))
-    
+        f.write("\n\n")
 ####################################################
 #
 # ADDS ROUTINE FUNCTION TO THE C FILE
 #
 ###################################################
-def addFunction(f, program, routine, l5x):
-    f.write("/* Function for Routine %s of program %s */\n" % (program,routine))
+def addFunction(f, program, routine, rungs):
+    f.write("/* Function for Routine %s of program %s */\n" % (routine,program))
     f.write("void %s_%s() {\n" % (program,routine))
-    processRungs(f,l5x[program][routine]['rungs'])
+    processRungs(f,rungs)
     f.write("}\n\n")
 
 
@@ -66,9 +66,11 @@ def addFunction(f, program, routine, l5x):
 def dict2c(l5x, output):
     with open(output, 'w') as f:
         addHeader(f)
-        for program in l5x:
-            for routine in l5x[program]:
-                addFunction(f, program, routine, l5x)
+        programs = l5x['programs']
+        for program in programs:
+            routines = programs[program]['routines']
+            for routine in routines:
+                addFunction(f, program, routine, routines[routine]['rungs'])
         
 
 ####################################################
