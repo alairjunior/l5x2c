@@ -27,9 +27,18 @@
 #
 ################################################################################
 from ply import lex
-from ply import yacc
+from ply.lex import TOKEN
 
 # List of token names.
+reserved = {
+   'XIC' : 'XIC',
+   'XIO' : 'XIO',
+   'OTE' : 'OTE',
+   'OTU' : 'OTU',
+   'OTL' : 'OTL',
+   'TON' : 'TON',
+}
+
 tokens = [
    'LPAR',
    'RPAR',
@@ -37,46 +46,51 @@ tokens = [
    'RBRA',
    'COMMA',
    'SEMICOLON',
-   'XIC',
-   'XIO',
-   'OTE',
-   'OTU',
-   'OTL',
-   'TON',
    'TAG',
-]
-
-# basic regular expressions for creating tokens
-VARIABLE  = r'([a-zA-Z_] ( [a-zA-Z0-9_] )* (\[ ([0-9])* \])?)'
-
-# Regular expression rules for simple tokens
-t_LPAR      = r'\('
-t_RPAR      = r'\)'
-t_LBRA      = r'\['
-t_RBRA      = r'\]'
-t_COMMA     = r','
-t_SEMICOLON = r';'
-t_XIC       = r'XIC'
-t_XIO       = r'XIO'
-t_OTE       = r'OTE'
-t_OTU       = r'OTU'
-t_OTL       = r'OTL'
-t_TON       = r'TON'
-t_TAG       = r'(' + VARIABLE + '(\.' + VARIABLE + ')*)'
-
-# A string containing ignored characters 
-t_ignore  = ' \t\n\r'
+] + list(reserved.values())
 
 
-# Define a rule so we can track line numbers
-def t_newline(t):
-    r'\n+'
-    t.lexer.lineno += len(t.value)
 
-# Error handling rule
-def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
-    t.lexer.skip(1)
+def runglex():
+    # basic regular expressions for creating tokens
+    VARIABLE  = r'([a-zA-Z_] ( [a-zA-Z0-9_] )* (\[ ([0-9])* \])?)'
+    TAG       = r'(' + VARIABLE + '(\.' + VARIABLE + ')*)'
+
+    # Regular expression rules for simple tokens
+    t_LPAR      = r'\('
+    t_RPAR      = r'\)'
+    t_LBRA      = r'\['
+    t_RBRA      = r'\]'
+    t_COMMA     = r','
+    t_SEMICOLON = r';'
+    t_XIC       = r'XIC'
+    t_XIO       = r'XIO'
+    t_OTE       = r'OTE'
+    t_OTU       = r'OTU'
+    t_OTL       = r'OTL'
+    t_TON       = r'TON'
+    
+
+    @TOKEN(TAG)
+    def t_TAG(t):
+        t.type = reserved.get(t.value,'TAG')  # Check for reserved words
+        return t
+
+    # A string containing ignored characters 
+    t_ignore  = ' \t\n\r'
+
+
+    # Define a rule so we can track line numbers
+    def t_newline(t):
+        r'\n+'
+        t.lexer.lineno += len(t.value)
+
+    # Error handling rule
+    def t_error(t):
+        print("Illegal character '%s'" % t.value[0])
+        t.lexer.skip(1)
+    
+    return lex.lex()
 
 ####################################################
 #
@@ -85,7 +99,7 @@ def t_error(t):
 ###################################################
 def main():
     # Build the lexer
-    lexer = lex.lex()
+    lexer = runglex()
     
     data = "XIO(Timer_Rst_Comandos.DN)[XIC(Q3K26D1.TAB) XIC(Q3K26D1.CON) ,XIC(Q3K26D1.CAB) ]XIO(Q3K26D1.LAB)OTE(Q3K26D1.CAB);"
     

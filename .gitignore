@@ -1,3 +1,5 @@
 ihm
 *.pyc
 *.c
+*.out
+parsetab.py
