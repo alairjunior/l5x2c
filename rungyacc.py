@@ -114,7 +114,7 @@ def rungyacc():
     ################################################################################
     def p_input_branch_l(p):
         'input_branch : LBRA input_level RBRA'
-        p[0] = 'push(acc());' + p[2] + 'and();'
+        p[0] = 'push(acc());' + p[2] + 'or();'
 
     def p_input_branch_e(p):
         'input_branch : LBRA RBRA'
@@ -166,7 +166,7 @@ def rungyacc():
     ################################################################################
     def p_output_branch_l(p):
         'output_branch : LBRA output_level RBRA'
-        p[0] = 'push(acc());' + p[2] + 'and();'
+        p[0] = 'push(acc());' + p[2] + 'or();'
 
     ################################################################################
     #
@@ -216,15 +216,19 @@ def rungyacc():
     ################################################################################
     def p_output_instruction_ote(p):
         'output_instruction : OTE LPAR TAG RPAR'
-        p[0] = p[3] + '=acc();push(0);'
+        p[0] = p[3] + '=acc();pop();push(0);'
         
     def p_output_instruction_otu(p):
         'output_instruction : OTU LPAR TAG RPAR'
-        p[0] = 'if(acc())' + p[3] + '=0;push(0);'
+        p[0] = 'if(acc())' + p[3] + '=0;pop();push(0);'
         
     def p_output_instruction_otl(p):
         'output_instruction : OTL LPAR TAG RPAR'
-        p[0] = 'if(acc())' + p[3] + '=1;push(0);'
+        p[0] = 'if(acc())' + p[3] + '=1;pop();push(0);'
+    
+    def p_output_instruction_res(p):
+        'output_instruction : RES LPAR TAG RPAR'
+        p[0] = 'if(acc())' + p[3] + '=0;pop();push(0);'
         
     ################################################################################
     #
