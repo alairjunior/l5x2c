@@ -29,11 +29,13 @@
 import sys
 import argparse
 import traceback
+from runglex import runglex
+from rungyacc import rungyacc
 from l5xparser import parse_l5x
 
 ####################################################
 #
-# ADDS THE HEADER TO THE C FILE
+# ADD THE HEADER TO THE C FILE
 #
 ###################################################
 def addHeader(f):
@@ -43,13 +45,40 @@ def addHeader(f):
 
 ####################################################
 #
+# ADD STACK HANDLING FUNCTIONS AND VARIABLES
+#
+###################################################
+def addStackFunctions(f):
+    f.write('''
+int stack[100] = {0};
+int top = 0;
+int acc() {return stack[top-1];}
+void push(int x) {stack[top++]=x;}
+int pop() {return stack[--top];}
+void and() {int a = pop(); int b = pop(); push(a && b);}
+void or() {int a = pop(); int b = pop(); push(a || b);}
+void clear(){top=0;}
+\n\n''')
+    
+
+####################################################
+#
 # PROCESSES THE RUNGS
 #
 ###################################################
 def processRungs(f, routine):
+    # build the lexer
+    lexer = runglex()
+    # Build the parser
+    parser = rungyacc()
     for rung in routine:
         f.write("    //%s\n" % (rung))
-        f.write("\n\n")
+        try:
+            f.write("    %s\n" % (parser.parse(rung)))
+        except SyntaxError as e:
+            f.write("    Syntax Error")
+        finally:
+            f.write("\n\n")
 ####################################################
 #
 # ADDS ROUTINE FUNCTION TO THE C FILE
@@ -70,6 +99,7 @@ def addFunction(f, program, routine, rungs):
 def dict2c(l5x, output):
     with open(output, 'w') as f:
         addHeader(f)
+        addStackFunctions(f)
         programs = l5x['programs']
         for program in programs:
             routines = programs[program]['routines']
@@ -93,8 +123,7 @@ def main():
         l5x_data = parse_l5x(args['input'])
         dict2c(l5x_data, args['output'])
     except Exception as e:
-        print e.message
-        traceback.print_exc()
+        print(e.message)
   
 if __name__== "__main__":
     main()

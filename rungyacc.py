@@ -67,7 +67,6 @@ from ply import yacc
 from runglex import tokens
 from runglex import runglex
 
-
 def rungyacc():
     ################################################################################
     #
@@ -77,11 +76,11 @@ def rungyacc():
     ################################################################################
     def p_rung_io(p):
         'rung : input_list output_list SEMICOLON'
-        pass
+        p[0] = 'clear();push(1);' + p[1] + p[2]
         
     def p_rung_o(p):
         'rung : output_list SEMICOLON'
-        pass
+        p[0] = 'clear();push(1);' + p[1]
 
     ################################################################################
     #
@@ -93,19 +92,19 @@ def rungyacc():
     ################################################################################
     def p_input_list_i(p):
         'input_list : input_instruction'
-        pass
+        p[0] = p[1]
         
     def p_input_list_ii(p):
         'input_list : input_list input_instruction'
-        pass
+        p[0] = p[1] + p[2]
 
     def p_input_list_b(p):
         'input_list : input_branch'
-        pass
+        p[0] = p[1]
 
     def p_input_list_ib(p):
         'input_list : input_list input_branch'
-        pass
+        p[0] = p[1] + p[2]
 
     ################################################################################
     #
@@ -115,7 +114,7 @@ def rungyacc():
     ################################################################################
     def p_input_branch_l(p):
         'input_branch : LBRA input_level RBRA'
-        pass
+        p[0] = 'push(acc());' + p[2] + 'and();'
 
     def p_input_branch_e(p):
         'input_branch : LBRA RBRA'
@@ -131,19 +130,20 @@ def rungyacc():
     ################################################################################
     def p_input_level_il(p):
         'input_level : input_list COMMA input_level'
-        pass
+        p[0] = p[1] + 'or();push(acc());' + p[3]
 
     def p_input_level_i(p):
         'input_level : input_list'
-        pass
+        p[0] = p[1]
         
     def p_input_level_c(p):
         'input_level : COMMA'
-        pass
+        p[0] = 'push(acc());or();push(acc());'
+        
         
     def p_input_level_l(p):
         'input_level : COMMA input_level'
-        pass
+        p[0] = 'push(acc());or();push(acc());' + p[2]
         
     ################################################################################
     #
@@ -153,11 +153,11 @@ def rungyacc():
     ################################################################################
     def p_output_list_i(p):
         'output_list : output_instruction'
-        pass
+        p[0] = p[1]
         
     def p_output_list_b(p):
         'output_list : output_branch'
-        pass
+        p[0] = p[1]
         
     ################################################################################
     #
@@ -166,7 +166,7 @@ def rungyacc():
     ################################################################################
     def p_output_branch_l(p):
         'output_branch : LBRA output_level RBRA'
-        pass
+        p[0] = 'push(acc());' + p[2] + 'and();'
 
     ################################################################################
     #
@@ -178,19 +178,19 @@ def rungyacc():
     ################################################################################
     def p_output_level_iol(p):
         'output_level : input_list output_list COMMA output_level'
-        pass
+        p[0] = p[1] + p[2] + 'or();push(acc());' + p[4]
 
     def p_output_level_ol(p):
         'output_level : output_list COMMA output_level'
-        pass
+        p[0] = p[1] + 'or();push(acc());' + p[3]
 
     def p_output_level_io(p):
         'output_level : input_list output_list'
-        pass
+        p[0] = p[1] + p[2]
         
     def p_output_level_o(p):
         'output_level : output_list'
-        pass
+        p[0] = p[1]
         
     ################################################################################
     #
@@ -199,11 +199,11 @@ def rungyacc():
     ################################################################################
     def p_input_instruction_xic(p):
         'input_instruction : XIC LPAR TAG RPAR'
-        pass
+        p[0] = 'push(' + p[3] + ');and();'
         
     def p_input_instruction_xio(p):
         'input_instruction : XIO LPAR TAG RPAR'
-        pass
+        p[0] = 'push(!' + p[3] + ');and();'
         
     ################################################################################
     #
@@ -212,7 +212,7 @@ def rungyacc():
     ################################################################################
     def p_output_instruction_ote(p):
         'output_instruction : OTE LPAR TAG RPAR'
-        pass
+        p[0] = p[3] + '=acc();push(0);'
         
     ################################################################################
     #
@@ -221,9 +221,13 @@ def rungyacc():
     ################################################################################
     def p_error(p):
         print("Syntax error at '%s'" % repr(p))
+        raise SyntaxError
         
         
     return yacc.yacc()
+
+
+
 
 ####################################################
 #
@@ -236,11 +240,18 @@ def main():
     # Build the parser
     parser = rungyacc()
     
-    data = "XIO(Timer_Rst_Comandos.DN)[XIC(Q3K26D1.TAB) XIC(Q3K26D1.CON) ,XIC(Q3K26D1.CAB) ]XIO(Q3K26D1.LAB)OTE(Q3K26D1.CAB);"
+    #data = "XIO(A)[XIC(B) XIC(C) ,XIC(D) ]XIO(E)OTE(F);"
+    data = "XIO(A)[XIC(B) XIC(C) ,XIC(D) ]XIO(E)[[XIC(F),XIC(G)]OTE(H),XIC(I)OTE(J)];"
+    #data = "XIO(Timer_Rst_Comandos.DN)[XIC(Q3K26D1.TAB) XIC(Q3K26D1.CON) ,XIC(Q3K26D1.CAB) ]XIO(Q3K26D1.LAB)OTE(Q3K26D1.CAB);"
+    #data = "XIO(Timer_Rst_Comandos.DN)[XIC(Q3K26D1.TAB) XIC(Q3K26D1.CON) ,XIC(Q3K26D1.CAB) ]XIO(Q3K26D1.LAB)[[XIC(C),XIC(D)]OTE(Q3K26D1.CAB),XIC(A)OTE(B)];"
+    #data = "XIO(C)XIC(B)OTE(A);"
     
+    #data = "[OTE(H),OTE(J)];"
+    
+    print(data)
     # Give the parser some input
     result = parser.parse(data)
-    print result
+    print(result)
     
 if __name__== "__main__":
     main()

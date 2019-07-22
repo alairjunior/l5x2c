@@ -167,11 +167,11 @@ def main():
     args = vars(parser.parse_args())
     try:
         if (args['construct']):
-            print globals()["list_"+args['construct']](args)
+            print(globals()["list_"+args['construct']](args))
         else:
-            print parse_l5x(args['filename'])
+            print(parse_l5x(args['filename']))
     except Exception as e:
-        print e.message
+        print(e.message)
         traceback.print_exc()
   
 if __name__== "__main__":
