@@ -230,6 +230,14 @@ def rungyacc():
         'output_instruction : RES LPAR TAG RPAR'
         p[0] = 'if(acc())' + p[3] + '=0;pop();push(0);'
         
+    def p_output_instruction_mov(p):
+        'output_instruction : MOV LPAR TAG COMMA TAG RPAR'
+        p[0] = 'if(acc())' + p[5] + '=' + p[3] + ';pop();push(0);'
+        
+    def p_output_instruction_mov(p):
+        'output_instruction : TON LPAR TAG COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'
+        p[0] = 'ton(acc(),' + p[3] + ');pop();push(0);'
+        
     ################################################################################
     #
     #   ERROR RULE

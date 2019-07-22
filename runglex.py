@@ -39,6 +39,7 @@ reserved = {
    'TON' : 'TON',
    'ONS' : 'ONS',
    'RES' : 'RES',
+   'MOV' : 'MOV',
 }
 
 tokens = [
@@ -49,6 +50,7 @@ tokens = [
    'COMMA',
    'SEMICOLON',
    'TAG',
+   'UNDEF_VAL',
 ] + list(reserved.values())
 
 
@@ -65,6 +67,7 @@ def runglex():
     t_RBRA      = r'\]'
     t_COMMA     = r','
     t_SEMICOLON = r';'
+    t_UNDEF_VAL = r'\?'
     t_XIC       = r'XIC'
     t_XIO       = r'XIO'
     t_OTE       = r'OTE'
@@ -73,6 +76,7 @@ def runglex():
     t_TON       = r'TON'
     t_ONS       = r'ONS'
     t_RES       = r'RES'
+    t_MOV       = r'MOV'
     
 
     @TOKEN(TAG)

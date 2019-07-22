@@ -29,37 +29,22 @@
 import sys
 import argparse
 import traceback
+from string import Template
 from runglex import runglex
 from rungyacc import rungyacc
 from l5xparser import parse_l5x
 
 ####################################################
 #
-# ADD THE HEADER TO THE C FILE
+# ADD TEMPLATES TO THE GENERATED FILE
 #
 ###################################################
-def addHeader(f):
-    f.write("\n/* This file was generated automatically by l5x2c */\n")
-    f.write("/*     https://github.com/alairjunior/l5x2c       */\n\n")
-    f.write("#include <assert.h>\n")
-
-####################################################
-#
-# ADD STACK HANDLING FUNCTIONS AND VARIABLES
-#
-###################################################
-def addStackFunctions(f, stack_size):
-    f.write('''
-int stack[%d] = {0};
-int top = 0;
-int acc() {return stack[top-1];}
-void push(int x) {stack[top++]=x;}
-int pop() {return stack[--top];}
-void and() {int a = pop(); int b = pop(); push(a && b);}
-void or() {int a = pop(); int b = pop(); push(a || b);}
-void clear(){top=0;}
-\n\n''' % stack_size)
-    
+def addTemplates(f, parameters):
+    with open('plcmodel.template', 'r') as t:
+        text = t.read()
+        template = Template(text)
+        f.write(template.substitute(parameters))
+        
 
 ####################################################
 #
@@ -85,7 +70,7 @@ def processRungs(f, routine):
 #
 ###################################################
 def addFunction(f, program, routine, rungs):
-    f.write("/* Function for Routine %s of program %s */\n" % (routine,program))
+    f.write("\n/* Function for Routine %s of program %s */\n" % (routine,program))
     f.write("void %s_%s() {\n" % (program,routine))
     processRungs(f,rungs)
     f.write("}\n\n")
@@ -96,10 +81,9 @@ def addFunction(f, program, routine, rungs):
 # TRANSLATES THE DICTIONARY TO A C FILE
 #
 ###################################################
-def dict2c(l5x, output, stack_size):
+def dict2c(l5x, output, parameters):
     with open(output, 'w') as f:
-        addHeader(f)
-        addStackFunctions(f, stack_size)
+        addTemplates(f, parameters)
         programs = l5x['programs']
         for program in programs:
             routines = programs[program]['routines']
@@ -119,13 +103,19 @@ def main():
     parser.add_argument("output")
     parser.add_argument('-ss', '--stack_size', type=int, default=1000,
                             help="Stack size for the stack machine")
+    parser.add_argument('-st', '--scan_time', type=int, default=100,
+                            help="Scan time for the PLC model")
     
     args = vars(parser.parse_args())
     try:
         l5x_data = parse_l5x(args['input'])
-        dict2c(l5x_data, args['output'], args['stack_size'])
-    except Exception as e:
-        print(e.message)
+        parameters = {
+            'stack_size': args['stack_size'],
+            'scan_time': args['scan_time']
+        }
+        dict2c(l5x_data, args['output'], parameters)
+    except KeyError as e:
+        print("Key Error: " + str(e))
   
 if __name__== "__main__":
     main()
