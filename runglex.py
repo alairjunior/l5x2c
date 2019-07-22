@@ -37,6 +37,7 @@ reserved = {
    'OTU' : 'OTU',
    'OTL' : 'OTL',
    'TON' : 'TON',
+   'ONS' : 'ONS',
 }
 
 tokens = [
@@ -69,6 +70,7 @@ def runglex():
     t_OTU       = r'OTU'
     t_OTL       = r'OTL'
     t_TON       = r'TON'
+    t_ONS       = r'ONS'
     
 
     @TOKEN(TAG)

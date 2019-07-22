@@ -204,6 +204,10 @@ def rungyacc():
     def p_input_instruction_xio(p):
         'input_instruction : XIO LPAR TAG RPAR'
         p[0] = 'push(!' + p[3] + ');and();'
+    
+    def p_input_instruction_ons(p):
+        'input_instruction : ONS LPAR TAG RPAR'
+        p[0] = 'if(' + p[3] + '==acc()){if(acc()){pop();push(0);}}else{' + p[3] + '=acc();}'
         
     ################################################################################
     #
@@ -213,6 +217,14 @@ def rungyacc():
     def p_output_instruction_ote(p):
         'output_instruction : OTE LPAR TAG RPAR'
         p[0] = p[3] + '=acc();push(0);'
+        
+    def p_output_instruction_otu(p):
+        'output_instruction : OTU LPAR TAG RPAR'
+        p[0] = 'if(acc())' + p[3] + '=0;push(0);'
+        
+    def p_output_instruction_otl(p):
+        'output_instruction : OTL LPAR TAG RPAR'
+        p[0] = 'if(acc())' + p[3] + '=1;push(0);'
         
     ################################################################################
     #

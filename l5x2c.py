@@ -39,18 +39,18 @@ from l5xparser import parse_l5x
 #
 ###################################################
 def addHeader(f):
-    f.write("/* This file was generated automatically by l5x2c */\n")
-    f.write("/*     https://github.com/alairjunior/l5x2c       */\n")
-    f.write("#include <assert.h>\n\n")
+    f.write("\n/* This file was generated automatically by l5x2c */\n")
+    f.write("/*     https://github.com/alairjunior/l5x2c       */\n\n")
+    f.write("#include <assert.h>\n")
 
 ####################################################
 #
 # ADD STACK HANDLING FUNCTIONS AND VARIABLES
 #
 ###################################################
-def addStackFunctions(f):
+def addStackFunctions(f, stack_size):
     f.write('''
-int stack[100] = {0};
+int stack[%d] = {0};
 int top = 0;
 int acc() {return stack[top-1];}
 void push(int x) {stack[top++]=x;}
@@ -58,7 +58,7 @@ int pop() {return stack[--top];}
 void and() {int a = pop(); int b = pop(); push(a && b);}
 void or() {int a = pop(); int b = pop(); push(a || b);}
 void clear(){top=0;}
-\n\n''')
+\n\n''' % stack_size)
     
 
 ####################################################
@@ -96,10 +96,10 @@ def addFunction(f, program, routine, rungs):
 # TRANSLATES THE DICTIONARY TO A C FILE
 #
 ###################################################
-def dict2c(l5x, output):
+def dict2c(l5x, output, stack_size):
     with open(output, 'w') as f:
         addHeader(f)
-        addStackFunctions(f)
+        addStackFunctions(f, stack_size)
         programs = l5x['programs']
         for program in programs:
             routines = programs[program]['routines']
@@ -117,11 +117,13 @@ def main():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("input")
     parser.add_argument("output")
+    parser.add_argument('-ss', '--stack_size', type=int, default=1000,
+                            help="Stack size for the stack machine")
     
     args = vars(parser.parse_args())
     try:
         l5x_data = parse_l5x(args['input'])
-        dict2c(l5x_data, args['output'])
+        dict2c(l5x_data, args['output'], args['stack_size'])
     except Exception as e:
         print(e.message)
   
