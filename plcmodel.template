@@ -29,6 +29,7 @@
 /*     https://github.com/alairjunior/l5x2c       */
 
 #include <assert.h>
+#include <stdint.h>
 
 /***************************************************
 /*             Stack control functions            */

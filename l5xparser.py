@@ -192,37 +192,6 @@ def build_structure_member(member):
     
     return structure
 
-####################################################
-#
-# RETURN A DICT CONTAINING ALL DATATYPES
-#
-###################################################
-def parse_l5x_datatypes(filename):
-    dom = parse_xml(filename)
-    l5x_datatypes = {}
-    for datatypes in dom.getElementsByTagName('DataTypes'):
-        for datatype in datatypes.getElementsByTagName('DataType'):
-            datatype_name = datatype.getAttribute('Name')
-            l5x_datatypes[datatype_name] = {}
-            for members in datatype.getElementsByTagName('Members'):
-                l5x_datatypes[datatype_name]['members'] = {}
-                members_dict = l5x_datatypes[datatype_name]['members']
-                for member in members.getElementsByTagName('Member'):
-                    members_dict[member.getAttribute('Name')] = {
-                        'type': member.getAttribute('DataType'),
-                        'dimension': member.getAttribute('Dimension'),
-                        'radix': member.getAttribute('Radix'),
-                    }
-            
-            for dependencies in datatype.getElementsByTagName('Dependencies'):
-                l5x_datatypes[datatype_name]['dependencies'] = {}
-                dependencies_dict = l5x_datatypes[datatype_name]['dependencies']
-                for dependency in dependencies.getElementsByTagName('Dependency'):
-                    dependencies_dict[dependency.getAttribute('Name')] = {
-                        'type': dependency.getAttribute('Type'),
-                    }
-                    
-    return l5x_datatypes
 
 ####################################################
 #
@@ -275,7 +244,38 @@ def parse_l5x_tags(filename):
                 logging.warning("Unsupported tag type %s. Tag %s was ignored" % (tagtype, tagname))
                 
     return l5x_tags
+
+####################################################
+#
+# RETURN A DICT CONTAINING ALL DATATYPES
+#
+###################################################
+def parse_l5x_datatypes(filename):
+    dom = parse_xml(filename)
+    l5x_datatypes = {}
+    for datatypes in dom.getElementsByTagName('DataTypes'):
+        for datatype in datatypes.getElementsByTagName('DataType'):
+            datatype_name = datatype.getAttribute('Name')
+            l5x_datatypes[datatype_name] = {}
+            for members in datatype.getElementsByTagName('Members'):
+                l5x_datatypes[datatype_name]['members'] = {}
+                members_dict = l5x_datatypes[datatype_name]['members']
+                for member in members.getElementsByTagName('Member'):
+                    members_dict[member.getAttribute('Name')] = {
+                        'type': member.getAttribute('DataType'),
+                        'dimension': member.getAttribute('Dimension'),
+                        'radix': member.getAttribute('Radix'),
+                    }
             
+            for dependencies in datatype.getElementsByTagName('Dependencies'):
+                l5x_datatypes[datatype_name]['dependencies'] = {}
+                dependencies_dict = l5x_datatypes[datatype_name]['dependencies']
+                for dependency in dependencies.getElementsByTagName('Dependency'):
+                    dependencies_dict[dependency.getAttribute('Name')] = {
+                        'type': dependency.getAttribute('Type'),
+                    }
+                    
+    return l5x_datatypes
 
 ####################################################
 #

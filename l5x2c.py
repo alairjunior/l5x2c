@@ -27,6 +27,7 @@
 #
 ################################################################################
 import sys
+import logging
 import argparse
 import traceback
 from string import Template
@@ -81,8 +82,14 @@ def addDataType(f, name, datatype):
         f.write('typedef struct %s {\n' % (name))
         for field in datatype['members']:
             typename = datatype['members'][field]['type']
+            dimension = 0
+            if 'dimension' in datatype['members'][field]:
+                dimension = int(datatype['members'][field]['dimension'])
             field_type = datatype_translation_lut.get(typename, typename)
-            f.write('\t%s %s;\n' % (field_type, field))
+            if dimension > 0:
+                f.write('\t%s %s[%d];\n' % (field_type, field, dimension))
+            else:
+                f.write('\t%s %s;\n' % (field_type, field))
         f.write('} %s;\n' % (name))
 
 ####################################################
@@ -90,20 +97,20 @@ def addDataType(f, name, datatype):
 # ADD DATATYPES TO THE GENERATED FILE
 #
 ###################################################
-def addDataTypes(f, l5x):
+def addDataTypes(f, datatypes):
     
     f.write('\n/***************************************************\n')
     f.write('*                DataType Definitions              *\n')
     f.write('***************************************************/\n')
     
-    unprocessed = list(l5x['datatypes'].keys())
+    unprocessed = list(datatypes.keys())
     while len(unprocessed) > 0:
         for name in unprocessed:
-            datatype = l5x['datatypes'][name]
+            datatype = datatypes[name]
             can_process = True
             if 'dependencies' in datatype:
                 for dependency in datatype['dependencies']:
-                    if dependency['name'] in unprocessed:
+                    if dependency in unprocessed:
                         can_process = False
                         break
             if can_process:
@@ -111,6 +118,33 @@ def addDataTypes(f, l5x):
                 unprocessed.remove(name)
                 break
 
+####################################################
+#
+# ADD TAGS TO THE GENERATED FILE
+#
+###################################################
+def addTags(f, tags):
+    
+    f.write('\n/***************************************************\n')
+    f.write('*                   Tags Definitions               *\n')
+    f.write('***************************************************/\n')
+    
+    
+    for tag in tags:
+        value = tags[tag]['value']
+        typename = datatype_translation_lut.get(value['type'],value['type'])
+        if tags[tag]['type'] == 'Structure':
+            f.write('%s %s;\n' % (typename, tag))
+        elif tags[tag]['type'] == 'Array':
+            f.write('%s %s[%s];\n' % (typename, tag, value['dimensions']))
+        elif tags[tag]['type'] == 'DataValue':
+            f.write('%s %s;\n' % (typename, tag))
+        else:
+            loggin.warning("Undefined Tag major type: %s" %(tags[tag]['type']))
+        
+        
+        typename = datatype_translation_lut.get(tags[tag]['type'], tags[tag]['type'])
+        
 
 ####################################################
 #
@@ -127,7 +161,7 @@ def processRungs(f, routine):
         try:
             f.write("    %s\n" % (parser.parse(rung)))
         except SyntaxError as e:
-            f.write("    Syntax Error")
+            f.write("//    Syntax Error")
         finally:
             f.write("\n\n")
 
@@ -151,7 +185,8 @@ def addFunction(f, program, routine, rungs):
 def dict2c(l5x, output, parameters):
     with open(output, 'w') as f:
         addTemplates(f, parameters)
-        addDataTypes(f, l5x)
+        addDataTypes(f, l5x['datatypes'])
+        addTags(f, l5x['tags']['Controller'])
         f.write('\n/***************************************************\n')
         f.write('*              Function Definitions                *\n')
         f.write('***************************************************/\n')
