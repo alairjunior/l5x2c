@@ -238,6 +238,10 @@ def rungyacc():
         'output_instruction : TON LPAR TAG COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'
         p[0] = 'ton(acc(),' + p[3] + ');pop();push(0);'
         
+    def p_output_instruction_ctu(p):
+        'output_instruction : CTU LPAR TAG COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'
+        p[0] = 'ctu(acc(),' + p[3] + ');pop();push(0);'
+        
     ################################################################################
     #
     #   ERROR RULE
