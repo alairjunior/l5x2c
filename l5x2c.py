@@ -36,6 +36,29 @@ from l5xparser import parse_l5x
 
 ####################################################
 #
+# LOOKUP TABLE FOR DATATYPE TRANSLATION
+#
+###################################################
+datatype_translation_lut = {
+    'SINT'   : 'int8_t',
+    'INT'    : 'int16_t',
+    'DINT'   : 'int32_t',
+    'BOOL'   : 'int8_t',
+    'BIT'    : 'int8_t',
+    'REAL'   : 'float',
+    'LINT'   : 'int64_t',
+    'USINT'  : 'uint8_t',
+    'UINT'   : 'unt16_t',
+    'UDINT'  : 'unt32_t',
+    'LREAL'  : 'double',
+    'ULINT'  : 'uint64_t',
+    'TIMER'  : 'timer',
+    'COUNTER': 'counter'
+}
+
+
+####################################################
+#
 # ADD TEMPLATES TO THE GENERATED FILE
 #
 ###################################################
@@ -44,11 +67,54 @@ def addTemplates(f, parameters):
         text = t.read()
         template = Template(text)
         f.write(template.substitute(parameters))
-        
+
+
 
 ####################################################
 #
-# PROCESSES THE RUNGS
+# ADD A DATATYPE TO THE GENERATED FILE
+#
+###################################################
+def addDataType(f, name, datatype):
+    if name not in datatype_translation_lut:
+        f.write('\n/* DataType %s  */\n' % (name))
+        f.write('typedef struct %s {\n' % (name))
+        for field in datatype['members']:
+            typename = datatype['members'][field]['type']
+            field_type = datatype_translation_lut.get(typename, typename)
+            f.write('\t%s %s;\n' % (field_type, field))
+        f.write('} %s;\n' % (name))
+
+####################################################
+#
+# ADD DATATYPES TO THE GENERATED FILE
+#
+###################################################
+def addDataTypes(f, l5x):
+    
+    f.write('\n/***************************************************\n')
+    f.write('*                DataType Definitions              *\n')
+    f.write('***************************************************/\n')
+    
+    unprocessed = list(l5x['datatypes'].keys())
+    while len(unprocessed) > 0:
+        for name in unprocessed:
+            datatype = l5x['datatypes'][name]
+            can_process = True
+            if 'dependencies' in datatype:
+                for dependency in datatype['dependencies']:
+                    if dependency['name'] in unprocessed:
+                        can_process = False
+                        break
+            if can_process:
+                addDataType(f, name, datatype)
+                unprocessed.remove(name)
+                break
+
+
+####################################################
+#
+# PROCESS THE RUNGS
 #
 ###################################################
 def processRungs(f, routine):
@@ -64,9 +130,10 @@ def processRungs(f, routine):
             f.write("    Syntax Error")
         finally:
             f.write("\n\n")
+
 ####################################################
 #
-# ADDS ROUTINE FUNCTION TO THE C FILE
+# ADD ROUTINE FUNCTION TO THE C FILE
 #
 ###################################################
 def addFunction(f, program, routine, rungs):
@@ -78,12 +145,16 @@ def addFunction(f, program, routine, rungs):
 
 ####################################################
 #
-# TRANSLATES THE DICTIONARY TO A C FILE
+# TRANSLATE THE DICTIONARY TO A C FILE
 #
 ###################################################
 def dict2c(l5x, output, parameters):
     with open(output, 'w') as f:
         addTemplates(f, parameters)
+        addDataTypes(f, l5x)
+        f.write('\n/***************************************************\n')
+        f.write('*              Function Definitions                *\n')
+        f.write('***************************************************/\n')
         programs = l5x['programs']
         for program in programs:
             routines = programs[program]['routines']

@@ -27,6 +27,7 @@
 #
 ################################################################################
 import sys
+import logging
 import argparse
 import traceback
 from xml.dom.minidom import parse
@@ -71,7 +72,10 @@ def list_programs(args):
             program_list.append(program.getAttribute("Name"))
     
     return program_list
-    
+
+
+
+
 ####################################################
 #
 # RETURNS THE LIST OF ROUTINES IN THE PROGRAM
@@ -122,6 +126,156 @@ def list_rungs(args):
     
     return rung_list
 
+####################################################
+#
+# BUILD A VALUE MEMBER
+#
+###################################################
+def build_value_member(member):
+    return {
+        'type': member.getAttribute('DataType'),
+        'radix': member.getAttribute('Radix'),
+        'value': member.getAttribute('Value')
+    }
+
+####################################################
+#
+# BUILD AN ARRAY MEMBER
+#
+###################################################
+def build_array_member(member):
+    
+    values = []
+    
+    for value in member.getElementsByTagName('Element'):
+        values.append({
+            'index': value.getAttribute('Index')[1:-1],
+            'value': value.getAttribute('Value'),
+        })
+    
+    
+    array = {
+        'type': member.getAttribute('DataType'),
+        'radix': member.getAttribute('Radix'),
+        'dimensions': member.getAttribute('Dimensions'),
+        'values': values
+    }
+    
+    return array
+
+####################################################
+#
+# BUILD A STRUCTURE MEMBER
+#
+###################################################
+def build_structure_member(member):
+    
+    fields = {}
+    for field in member.childNodes:
+        if field.nodeType == field.ELEMENT_NODE:
+            fieldname = field.getAttribute('Name')
+            tagname = field.tagName
+            if tagname == 'DataValueMember':
+                fields[fieldname] = build_value_member(field)
+            elif tagname == 'ArrayMember':
+                fields[fieldname] = build_array_member(field)
+            elif tagname == 'StructureMember':
+                fields[fieldname] = build_structure_member(field)
+            else:
+                logging.warning("Unsupported field type %s. Field %s was ignored" % (tagname,fieldname))
+    
+    
+    structure = {
+        'type': member.getAttribute('DataType'),
+        'fields': fields
+    }
+    
+    return structure
+
+####################################################
+#
+# RETURN A DICT CONTAINING ALL DATATYPES
+#
+###################################################
+def parse_l5x_datatypes(filename):
+    dom = parse_xml(filename)
+    l5x_datatypes = {}
+    for datatypes in dom.getElementsByTagName('DataTypes'):
+        for datatype in datatypes.getElementsByTagName('DataType'):
+            datatype_name = datatype.getAttribute('Name')
+            l5x_datatypes[datatype_name] = {}
+            for members in datatype.getElementsByTagName('Members'):
+                l5x_datatypes[datatype_name]['members'] = {}
+                members_dict = l5x_datatypes[datatype_name]['members']
+                for member in members.getElementsByTagName('Member'):
+                    members_dict[member.getAttribute('Name')] = {
+                        'type': member.getAttribute('DataType'),
+                        'dimension': member.getAttribute('Dimension'),
+                        'radix': member.getAttribute('Radix'),
+                    }
+            
+            for dependencies in datatype.getElementsByTagName('Dependencies'):
+                l5x_datatypes[datatype_name]['dependencies'] = {}
+                dependencies_dict = l5x_datatypes[datatype_name]['dependencies']
+                for dependency in dependencies.getElementsByTagName('Dependency'):
+                    dependencies_dict[dependency.getAttribute('Name')] = {
+                        'type': dependency.getAttribute('Type'),
+                    }
+                    
+    return l5x_datatypes
+
+####################################################
+#
+# RETURN A DICT CONTAINING ALL TAGS
+#
+###################################################
+def parse_l5x_tags(filename):
+    dom = parse_xml(filename)
+    l5x_tags = {}
+    for tags in dom.getElementsByTagName("Tags"):
+        parent_tag = tags.parentNode.tagName
+        entry = None
+        if (parent_tag == 'Controller'):
+            l5x_tags['Controller'] = {}
+            entry = l5x_tags['Controller']
+        elif (parent_tag == 'Program'):
+            if not 'Programs' in l5x_tags:
+                l5x_tags['Programs'] = {}
+            l5x_tags['Programs'][tags.parentNode.getAttribute('Name')] = {}
+            entry = l5x_tags['Programs'][tags.parentNode.getAttribute('Name')]
+        else:
+            raise Exception("Unsupported tag parent: %s" % (parent_tag))
+        
+        for tag in tags.getElementsByTagName('Tag'):
+            decorated = False
+            tagname = tag.getAttribute('Name')
+            tagtype = tag.getAttribute('DataType')
+            for data in tag.getElementsByTagName('Data'):
+                if (data.getAttribute('Format') == 'Decorated'):
+                    for details in data.childNodes:
+                        if details.nodeType == details.ELEMENT_NODE:                            
+                            if details.getAttribute('DataType') == tagtype:
+                                if details.tagName == 'Structure':
+                                    decorated = True
+                                    entry[tagname] = {}
+                                    entry[tagname]['type'] = details.tagName
+                                    entry[tagname]['value'] = build_structure_member(details)
+                                elif details.tagName == 'DataValue':
+                                    decorated = True
+                                    entry[tagname] = {}
+                                    entry[tagname]['type'] = details.tagName
+                                    entry[tagname]['value'] = build_value_member(details)
+                                elif details.tagName == 'Array':
+                                    decorated = True
+                                    entry[tagname] = {}
+                                    entry[tagname]['type'] = details.tagName
+                                    entry[tagname]['value'] = build_array_member(details)
+                
+            if not decorated:
+                logging.warning("Unsupported tag type %s. Tag %s was ignored" % (tagtype, tagname))
+                
+    return l5x_tags
+            
 
 ####################################################
 #
@@ -132,6 +286,8 @@ def parse_l5x(filename):
     l5x_data = {}
     args = {}
     args['filename'] = filename
+    l5x_data['tags'] = parse_l5x_tags(filename)
+    l5x_data['datatypes'] = parse_l5x_datatypes(filename)
     l5x_data['programs'] = {}
     for program_name in list_programs(args):
         args['program'] = program_name
@@ -147,8 +303,6 @@ def parse_l5x(filename):
             routine['rungs'] = list_rungs(args)
     return l5x_data
     
-
-
 ####################################################
 #
 # MAIN SCRIPT FOR COMMAND LINE EXECUTION
@@ -171,7 +325,7 @@ def main():
         else:
             print(parse_l5x(args['filename']))
     except Exception as e:
-        print(e.message)
+        print(str(e))
         traceback.print_exc()
   
 if __name__== "__main__":
