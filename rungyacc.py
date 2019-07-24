@@ -208,6 +208,26 @@ def rungyacc():
     def p_input_instruction_ons(p):
         'input_instruction : ONS LPAR TAG RPAR'
         p[0] = 'if(' + p[3] + '==acc()){if(acc()){pop();push(0);}}else{' + p[3] + '=acc();}'
+    
+    def p_input_instruction_equ(p):
+        'input_instruction : EQU LPAR TAG COMMA TAG RPAR'
+        p[0] = 'push(%s==%s);and();' % (p[3],p[5])
+    
+    def p_input_instruction_geq(p):
+        'input_instruction : GEQ LPAR TAG COMMA TAG RPAR'
+        p[0] = 'push(%s>=%s);and();' % (p[3],p[5])
+    
+    def p_input_instruction_neq(p):
+        'input_instruction : NEQ LPAR TAG COMMA TAG RPAR'
+        p[0] = 'push(%s!=%s);and();' % (p[3],p[5])
+        
+    def p_input_instruction_leq(p):
+        'input_instruction : LEQ LPAR TAG COMMA TAG RPAR'
+        p[0] = 'push(%s<%s);and();' % (p[3],p[5])
+        
+    def p_input_instruction_grt(p):
+        'input_instruction : GRT LPAR TAG COMMA TAG RPAR'
+        p[0] = 'push(%s>%s);and();' % (p[3],p[5])
         
     ################################################################################
     #
@@ -237,6 +257,10 @@ def rungyacc():
     def p_output_instruction_ton(p):
         'output_instruction : TON LPAR TAG COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'
         p[0] = 'ton(acc(), &' + p[3] + ');pop();push(0);'
+    
+    def p_output_instruction_tof(p):
+        'output_instruction : TOF LPAR TAG COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'
+        p[0] = 'tof(acc(), &' + p[3] + ');pop();push(0);'
         
     def p_output_instruction_ctu(p):
         'output_instruction : CTU LPAR TAG COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'

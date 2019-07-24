@@ -35,13 +35,13 @@
 /***************************************************
 /*             Stack control functions            */
 /**************************************************/
-int stack[${stack_size}] = {0};
+bool stack[${stack_size}] = {false};
 int top = 0;
-int acc() {return stack[top-1];}
-void push(int x) {stack[top++]=x;}
-int pop() {return stack[--top];}
-void and() {int a = pop(); int b = pop(); push(a && b);}
-void or() {int a = pop(); int b = pop(); push(a || b);}
+bool acc() {return stack[top-1];}
+void push(bool x) {stack[top++]=x;}
+bool pop() {return stack[--top];}
+void and() {bool a = pop(); bool b = pop(); push(a && b);}
+void or() {bool a = pop(); bool b = pop(); push(a || b);}
 void clear(){top=0;}
 
 /***************************************************
@@ -53,40 +53,87 @@ int get_scan_time(){return ${scan_time};}
 /*                Timer Structure                 */
 /**************************************************/
 typedef struct timer {
-    int EN;
-    int TT;
-    int DN;
+    bool EN;
+    bool TT;
+    bool DN;
     long int PRE;
     long int ACC;
 } timer;
 
 /***************************************************
-/*                Timer Function                  */
+/*                Timer Functions                 */
 /**************************************************/
-void ton(int acc, timer *t) {
-    t->EN = acc;
-    if (acc) {
-        if (t->ACC < t->PRE) {
-            t->ACC += get_scan_time();
-        } 
-        if (t->ACC >= t->PRE) t->DN = 1;
-        else t->DN = 0;
-    } else {
-        t->DN = 0;
+/* Based on Rockwell's manual */
+void ton(bool acc, timer *t) {
+    if (!acc) {
+        t->DN = false;
         t->ACC = 0;
+        t->TT = false;
+        t->EN = false;
+    } else {
+        t->TT = true;
+        if(t->DN) {
+            t->TT = false;
+            t->EN = true;
+            return;
+        } else if (!t->EN) {
+            t->EN = true;
+        } else {
+            t->ACC += get_scan_time();
+            if (t->ACC < 0) {
+                t->ACC = 2147483647;
+                t->TT = false;
+                t->DN = true;
+                t->EN = true;
+            } else if (t->ACC >= t->PRE) {
+                t->TT = false;
+                t->DN = true;
+                t->EN = true;
+            }
+        }
     }
-    t->TT = t->EN && !t->DN;
+}
+
+/* Based on Rockwell's manual */
+void tof(bool acc, timer *t) {
+    if (acc) {
+        t->DN = true;
+        t->ACC = 0;
+        t->TT = false;
+        t->EN = true;
+    } else {
+        t->TT = true;
+        if(!t->DN) {
+            t->TT = false;
+            t->EN = false;
+            return;
+        } else if (t->EN) {
+            t->EN = false;
+        } else {
+            t->ACC += get_scan_time();
+            if (t->ACC < 0) {
+                t->ACC = 2147483647;
+                t->TT = false;
+                t->DN = false;
+                t->EN = false;
+            } else if (t->ACC >= t->PRE) {
+                t->TT = false;
+                t->DN = false;
+                t->EN = false;
+            }
+        }
+    }
 }
 
 /***************************************************
 /*              Counter Structure                 */
 /**************************************************/
 typedef struct counter {
-    int CD;
-    int CU;
-    int DN;
-    int OV;
-    int UN;
+    bool CD;
+    bool CU;
+    bool DN;
+    bool OV;
+    bool UN;
     long int PRE;
     long int ACC;
 } counter;
@@ -95,39 +142,40 @@ typedef struct counter {
 /***************************************************
 /*              Counter Function                  */
 /**************************************************/
+/* Based on Rockwell's manual */
 void ctu(int acc, counter *c) {
-    int ov = 0;
+    bool ov = false;
     if(acc) {
         if (!c->CU) {
-            c->CU = 1;
+            c->CU = true;
             if (c->ACC == 2147483647) {
-               ov = 1; 
+               ov = true; 
             } 
             c->ACC += 1;
             if (ov) {
                 if (c->UN) {
-                    c->UN = 0;
-                    c->OV = 0;
+                    c->UN = false;
+                    c->OV = false;
                 } else {
-                    c->OV = 1;
+                    c->OV = true;
                     return;
                 }
             }
         }
         if (!c->UN && !c->OV) {
             if (c->ACC < c->PRE) {
-                c->DN = 0;
+                c->DN = false;
             } else {
-                c->DN = 1;
+                c->DN = true;
             }
         }
     } else {
-        c->CU = 0;
+        c->CU = false;
         if (!c->UN && !c->OV) {
             if (c->ACC < c->PRE) {
-                c->DN = 0;
+                c->DN = false;
             } else {
-                c->DN = 1;
+                c->DN = true;
             }
         }
     }

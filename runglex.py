@@ -37,10 +37,16 @@ reserved = {
    'OTU' : 'OTU',
    'OTL' : 'OTL',
    'TON' : 'TON',
+   'TOF' : 'TOF',
    'ONS' : 'ONS',
    'RES' : 'RES',
    'MOV' : 'MOV',
    'CTU' : 'CTU',
+   'EQU' : 'EQU',
+   'GEQ' : 'GEQ',
+   'NEQ' : 'NEQ',
+   'LEQ' : 'LEQ',
+   'GRT' : 'GRT',
 }
 
 tokens = [
@@ -75,10 +81,16 @@ def runglex():
     t_OTU       = r'OTU'
     t_OTL       = r'OTL'
     t_TON       = r'TON'
+    t_TOF       = r'TOF'
     t_ONS       = r'ONS'
     t_RES       = r'RES'
     t_MOV       = r'MOV'
     t_CTU       = r'CTU'
+    t_EQU       = r'EQU'
+    t_GEQ       = r'GEQ'
+    t_NEQ       = r'NEQ'
+    t_LEQ       = r'LEQ'
+    t_GRT       = r'GRT'
     
 
     @TOKEN(TAG)
