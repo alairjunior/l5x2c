@@ -3,3 +3,4 @@ ihm
 *.c
 *.out
 parsetab.py
+__pycache__

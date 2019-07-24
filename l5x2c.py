@@ -79,7 +79,7 @@ def addTemplates(f, parameters):
 def addDataType(f, name, datatype):
     if name not in datatype_translation_lut:
         f.write('\n/* DataType %s  */\n' % (name))
-        f.write('typedef struct %s {\n' % (name))
+        f.write('typedef struct %s_t {\n' % (name))
         for field in datatype['members']:
             typename = datatype['members'][field]['type']
             dimension = 0
@@ -90,7 +90,7 @@ def addDataType(f, name, datatype):
                 f.write('\t%s %s[%d];\n' % (field_type, field, dimension))
             else:
                 f.write('\t%s %s;\n' % (field_type, field))
-        f.write('} %s;\n' % (name))
+        f.write('} %s_t;\n' % (name))
 
 ####################################################
 #
@@ -120,31 +120,45 @@ def addDataTypes(f, datatypes):
 
 ####################################################
 #
+# GET INITIAL VALUE STRING
+#
+###################################################
+def get_initial_value(node):
+    if node['type'] == 'value':
+        return '=' + node['data']['data']
+    elif node['type'] == 'array':
+        result = "={" 
+        for index in node['data']['data']:
+            ending = ',' if int(index) != int(node['data']['dimensions']) - 1 else ''
+            result += get_initial_value(node['data']['data'][index])[1::] + ending
+        return result + "}"
+    elif node['type'] == 'struct':
+        result = "={"
+        ending = '.'
+        for field in node['data']['data']:
+            result += (ending + field + get_initial_value(node['data']['data'][field]))
+            ending = ',.'
+        return result + '}'
+    else:
+        logging.error("Undefined Tag major type: %s" %(node['type']))
+        raise Exception("Undefined Tag major type: %s" %(node['type']))
+
+####################################################
+#
 # ADD TAGS TO THE GENERATED FILE
 #
 ###################################################
 def addTags(f, tags):
     
     f.write('\n/***************************************************\n')
-    f.write('*                   Tags Definitions               *\n')
+    f.write('*                 Tags Definitions                 *\n')
     f.write('***************************************************/\n')
     
-    
     for tag in tags:
-        value = tags[tag]['value']
-        typename = datatype_translation_lut.get(value['type'],value['type'])
-        if tags[tag]['type'] == 'Structure':
-            f.write('%s %s;\n' % (typename, tag))
-        elif tags[tag]['type'] == 'Array':
-            f.write('%s %s[%s];\n' % (typename, tag, value['dimensions']))
-        elif tags[tag]['type'] == 'DataValue':
-            f.write('%s %s;\n' % (typename, tag))
-        else:
-            loggin.warning("Undefined Tag major type: %s" %(tags[tag]['type']))
-        
-        
-        typename = datatype_translation_lut.get(tags[tag]['type'], tags[tag]['type'])
-        
+        content = tags[tag]
+        datatype = content['data']['type']
+        typename = datatype_translation_lut.get(datatype, datatype + '_t')
+        f.write('%s %s%s;\n' % (typename, tag, get_initial_value(content)))
 
 ####################################################
 #
@@ -222,6 +236,7 @@ def main():
         dict2c(l5x_data, args['output'], parameters)
     except KeyError as e:
         print("Key Error: " + str(e))
-  
+        traceback.print_exc()
+        
 if __name__== "__main__":
     main()

@@ -82,6 +82,7 @@ void ton(int acc, timer t) {
 /*              Counter Structure                 */
 /**************************************************/
 typedef struct counter {
+    int CD;
     int CU;
     int DN;
     int OV;

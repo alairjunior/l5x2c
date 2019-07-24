@@ -134,9 +134,33 @@ def list_rungs(args):
 def build_value_member(member):
     return {
         'type': member.getAttribute('DataType'),
-        'radix': member.getAttribute('Radix'),
-        'value': member.getAttribute('Value')
+        'data': member.getAttribute('Value')
     }
+
+####################################################
+#
+# PROCESS DATA STRUCTURE
+#
+###################################################
+def process_data_structure(node, tagtype):
+    entry = None
+    for content in node.childNodes:
+        if content.nodeType == content.ELEMENT_NODE:                            
+            if content.getAttribute('DataType') == tagtype:
+                if content.tagName == 'Structure':
+                    entry = {}
+                    entry['type'] = 'struct'
+                    entry['data'] = build_structure_member(content)
+                elif content.tagName == 'DataValue':
+                    entry = {}
+                    entry['type'] = 'value'
+                    entry['data'] = build_value_member(content)
+                elif content.tagName == 'Array':
+                    entry = {}
+                    entry['type'] = 'array'
+                    entry['data'] = build_array_member(content)
+    return entry
+    
 
 ####################################################
 #
@@ -145,20 +169,30 @@ def build_value_member(member):
 ###################################################
 def build_array_member(member):
     
-    values = []
-    
-    for value in member.getElementsByTagName('Element'):
-        values.append({
-            'index': value.getAttribute('Index')[1:-1],
-            'value': value.getAttribute('Value'),
-        })
-    
+    data = {}
+    datatype = member.getAttribute('DataType')
+    for element in member.getElementsByTagName('Element'):
+        index = int(element.getAttribute('Index')[1:-1])
+        if element.hasAttribute('Value'):
+            data[index] = {
+                'type': 'value',
+                'data': {
+                    'type': datatype,
+                    'data': element.getAttribute('Value')
+                }
+            }
+        else:
+            for structure in element.getElementsByTagName('Structure'):
+                if structure.getAttribute('DataType') == datatype:
+                    data[index] = {
+                        'type': 'struct',
+                        'data': build_structure_member(structure)
+                    }
     
     array = {
         'type': member.getAttribute('DataType'),
-        'radix': member.getAttribute('Radix'),
         'dimensions': member.getAttribute('Dimensions'),
-        'values': values
+        'data': data
     }
     
     return array
@@ -170,24 +204,33 @@ def build_array_member(member):
 ###################################################
 def build_structure_member(member):
     
-    fields = {}
+    data = {}
     for field in member.childNodes:
         if field.nodeType == field.ELEMENT_NODE:
             fieldname = field.getAttribute('Name')
             tagname = field.tagName
             if tagname == 'DataValueMember':
-                fields[fieldname] = build_value_member(field)
+                data[fieldname] = {
+                    'type': 'value',
+                    'data': build_value_member(field)
+                }
             elif tagname == 'ArrayMember':
-                fields[fieldname] = build_array_member(field)
+                data[fieldname] = {
+                    'type': 'array',
+                    'data': build_array_member(field)
+                }
             elif tagname == 'StructureMember':
-                fields[fieldname] = build_structure_member(field)
+                data[fieldname] = {
+                    'type': 'struct',
+                    'data': build_structure_member(field)
+                }
             else:
                 logging.warning("Unsupported field type %s. Field %s was ignored" % (tagname,fieldname))
     
     
     structure = {
         'type': member.getAttribute('DataType'),
-        'fields': fields
+        'data': data
     }
     
     return structure
@@ -201,6 +244,7 @@ def build_structure_member(member):
 def parse_l5x_tags(filename):
     dom = parse_xml(filename)
     l5x_tags = {}
+    
     for tags in dom.getElementsByTagName("Tags"):
         parent_tag = tags.parentNode.tagName
         entry = None
@@ -213,35 +257,28 @@ def parse_l5x_tags(filename):
             l5x_tags['Programs'][tags.parentNode.getAttribute('Name')] = {}
             entry = l5x_tags['Programs'][tags.parentNode.getAttribute('Name')]
         else:
-            raise Exception("Unsupported tag parent: %s" % (parent_tag))
+            loggin.warning("Unsupported parent tag: %s" % (parent_tag))
         
         for tag in tags.getElementsByTagName('Tag'):
-            decorated = False
             tagname = tag.getAttribute('Name')
             tagtype = tag.getAttribute('DataType')
+            tagdata = None
             for data in tag.getElementsByTagName('Data'):
-                if (data.getAttribute('Format') == 'Decorated'):
-                    for details in data.childNodes:
-                        if details.nodeType == details.ELEMENT_NODE:                            
-                            if details.getAttribute('DataType') == tagtype:
-                                if details.tagName == 'Structure':
-                                    decorated = True
-                                    entry[tagname] = {}
-                                    entry[tagname]['type'] = details.tagName
-                                    entry[tagname]['value'] = build_structure_member(details)
-                                elif details.tagName == 'DataValue':
-                                    decorated = True
-                                    entry[tagname] = {}
-                                    entry[tagname]['type'] = details.tagName
-                                    entry[tagname]['value'] = build_value_member(details)
-                                elif details.tagName == 'Array':
-                                    decorated = True
-                                    entry[tagname] = {}
-                                    entry[tagname]['type'] = details.tagName
-                                    entry[tagname]['value'] = build_array_member(details)
+                if data.hasAttribute('Format'):
+                    if data.getAttribute('Format') == 'Decorated':
+                        tagdata = data
+                        break
+                    
+            if tagdata is None:
+                logging.warning("Tag %s has no Decorated Data. Ignored." % (tagname))
+                continue
                 
-            if not decorated:
-                logging.warning("Unsupported tag type %s. Tag %s was ignored" % (tagtype, tagname))
+            result = process_data_structure(tagdata, tagtype)
+            
+            if result is None:
+                logging.warning("Unsupported tag type %s. Tag %s was ignored." % (tagtype, tagname))
+            else:
+                entry[tagname] = result
                 
     return l5x_tags
 
@@ -323,7 +360,7 @@ def main():
         if (args['construct']):
             print(globals()["list_"+args['construct']](args))
         else:
-            print(parse_l5x(args['filename']))
+            print(parse_l5x(args['filename'])['tags'])
     except Exception as e:
         print(str(e))
         traceback.print_exc()

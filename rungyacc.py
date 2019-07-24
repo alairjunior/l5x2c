@@ -228,7 +228,7 @@ def rungyacc():
     
     def p_output_instruction_res(p):
         'output_instruction : RES LPAR TAG RPAR'
-        p[0] = 'if(acc())' + p[3] + '=0;pop();push(0);'
+        p[0] = 'if(acc())' + p[3] + '.ACC=0;pop();push(0);'
         
     def p_output_instruction_mov(p):
         'output_instruction : MOV LPAR TAG COMMA TAG RPAR'
