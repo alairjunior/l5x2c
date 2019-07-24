@@ -114,7 +114,7 @@ def rungyacc():
     ################################################################################
     def p_input_branch_l(p):
         'input_branch : LBRA input_level RBRA'
-        p[0] = 'push(acc());' + p[2] + 'or();'
+        p[0] = 'push(0);push(1);' + p[2] + 'or();and();'
 
     def p_input_branch_e(p):
         'input_branch : LBRA RBRA'
@@ -130,7 +130,7 @@ def rungyacc():
     ################################################################################
     def p_input_level_il(p):
         'input_level : input_list COMMA input_level'
-        p[0] = p[1] + 'or();push(acc());' + p[3]
+        p[0] = p[1] + 'or();push(1);' + p[3]
 
     def p_input_level_i(p):
         'input_level : input_list'
@@ -138,12 +138,12 @@ def rungyacc():
         
     def p_input_level_c(p):
         'input_level : COMMA'
-        p[0] = 'push(acc());or();push(acc());'
+        p[0] = 'or();push(1);'
         
         
     def p_input_level_l(p):
         'input_level : COMMA input_level'
-        p[0] = 'push(acc());or();push(acc());' + p[2]
+        p[0] = 'or();push(1);' + p[2]
         
     ################################################################################
     #
@@ -166,7 +166,7 @@ def rungyacc():
     ################################################################################
     def p_output_branch_l(p):
         'output_branch : LBRA output_level RBRA'
-        p[0] = 'push(acc());' + p[2] + 'or();'
+        p[0] = 'push(0);push(1);' + p[2] + 'or();and();'
 
     ################################################################################
     #
@@ -178,11 +178,11 @@ def rungyacc():
     ################################################################################
     def p_output_level_iol(p):
         'output_level : input_list output_list COMMA output_level'
-        p[0] = p[1] + p[2] + 'or();push(acc());' + p[4]
+        p[0] = p[1] + p[2] + 'or();push(1);' + p[4]
 
     def p_output_level_ol(p):
         'output_level : output_list COMMA output_level'
-        p[0] = p[1] + 'or();push(acc());' + p[3]
+        p[0] = p[1] + 'or();push(1);' + p[3]
 
     def p_output_level_io(p):
         'output_level : input_list output_list'
@@ -236,11 +236,11 @@ def rungyacc():
         
     def p_output_instruction_ton(p):
         'output_instruction : TON LPAR TAG COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'
-        p[0] = 'ton(acc(),' + p[3] + ');pop();push(0);'
+        p[0] = 'ton(acc(), &' + p[3] + ');pop();push(0);'
         
     def p_output_instruction_ctu(p):
         'output_instruction : CTU LPAR TAG COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'
-        p[0] = 'ctu(acc(),' + p[3] + ');pop();push(0);'
+        p[0] = 'ctu(acc(), &' + p[3] + ');pop();push(0);'
         
     ################################################################################
     #

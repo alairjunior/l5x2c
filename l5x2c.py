@@ -44,8 +44,8 @@ datatype_translation_lut = {
     'SINT'   : 'int8_t',
     'INT'    : 'int16_t',
     'DINT'   : 'int32_t',
-    'BOOL'   : 'int8_t',
-    'BIT'    : 'int8_t',
+    'BOOL'   : 'bool',
+    'BIT'    : 'bool',
     'REAL'   : 'float',
     'LINT'   : 'int64_t',
     'USINT'  : 'uint8_t',
@@ -127,18 +127,18 @@ def get_initial_value(node):
     if node['type'] == 'value':
         return '=' + node['data']['data']
     elif node['type'] == 'array':
-        result = "={" 
+        result = " = { " 
         for index in node['data']['data']:
-            ending = ',' if int(index) != int(node['data']['dimensions']) - 1 else ''
-            result += get_initial_value(node['data']['data'][index])[1::] + ending
-        return result + "}"
+            ending = ', ' if int(index) != int(node['data']['dimensions']) - 1 else ''
+            result += get_initial_value(node['data']['data'][index]).replace('=','',1) + ending
+        return result + " }"
     elif node['type'] == 'struct':
-        result = "={"
+        result = " = { "
         ending = '.'
         for field in node['data']['data']:
             result += (ending + field + get_initial_value(node['data']['data'][field]))
-            ending = ',.'
-        return result + '}'
+            ending = ', .'
+        return result + ' }'
     else:
         logging.error("Undefined Tag major type: %s" %(node['type']))
         raise Exception("Undefined Tag major type: %s" %(node['type']))
@@ -149,6 +149,7 @@ def get_initial_value(node):
 #
 ###################################################
 def addTags(f, tags):
+    if len(tags) == 0: return
     
     f.write('\n/***************************************************\n')
     f.write('*                 Tags Definitions                 *\n')
@@ -158,7 +159,7 @@ def addTags(f, tags):
         content = tags[tag]
         datatype = content['data']['type']
         typename = datatype_translation_lut.get(datatype, datatype + '_t')
-        f.write('%s %s%s;\n' % (typename, tag, get_initial_value(content)))
+        f.write('%s %s%s;\n\n' % (typename, tag, get_initial_value(content)))
 
 ####################################################
 #
@@ -202,10 +203,14 @@ def dict2c(l5x, output, parameters):
         addDataTypes(f, l5x['datatypes'])
         addTags(f, l5x['tags']['Controller'])
         f.write('\n/***************************************************\n')
-        f.write('*              Function Definitions                *\n')
+        f.write('*               Program Definitions                *\n')
         f.write('***************************************************/\n')
         programs = l5x['programs']
         for program in programs:
+            f.write("\n/* Program %s */\n" % (program))
+            if 'Programs' in l5x['tags']:
+                if program in l5x['tags']['Programs']:
+                    addTags(f, l5x['tags']['Programs'][program])
             routines = programs[program]['routines']
             for routine in routines:
                 addFunction(f, program, routine, routines[routine]['rungs'])

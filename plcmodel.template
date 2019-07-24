@@ -30,6 +30,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /***************************************************
 /*             Stack control functions            */
@@ -62,20 +63,19 @@ typedef struct timer {
 /***************************************************
 /*                Timer Function                  */
 /**************************************************/
-void ton(int acc, timer t) {
-    t.EN = acc;
+void ton(int acc, timer *t) {
+    t->EN = acc;
     if (acc) {
-        if (t.ACC < t.PRE) {
-            t.ACC += get_scan_time();
+        if (t->ACC < t->PRE) {
+            t->ACC += get_scan_time();
         } 
-        if (t.ACC >= t.PRE) t.DN = 1;
-        else t.DN = 0;
+        if (t->ACC >= t->PRE) t->DN = 1;
+        else t->DN = 0;
     } else {
-        t.DN = 0;
-        t.ACC = 0;
+        t->DN = 0;
+        t->ACC = 0;
     }
-    t.TT = t.EN && !t.DN;
-    if (acc && (t.ACC >= t.PRE)) assert(t.DN);
+    t->TT = t->EN && !t->DN;
 }
 
 /***************************************************
@@ -95,39 +95,39 @@ typedef struct counter {
 /***************************************************
 /*              Counter Function                  */
 /**************************************************/
-void ctu(int acc, counter c) {
+void ctu(int acc, counter *c) {
     int ov = 0;
     if(acc) {
-        if (!c.CU) {
-            c.CU = 1;
-            if (c.ACC == 2147483647) {
+        if (!c->CU) {
+            c->CU = 1;
+            if (c->ACC == 2147483647) {
                ov = 1; 
             } 
-            c.ACC += 1;
+            c->ACC += 1;
             if (ov) {
-                if (c.UN) {
-                    c.UN = 0;
-                    c.OV = 0;
+                if (c->UN) {
+                    c->UN = 0;
+                    c->OV = 0;
                 } else {
-                    c.OV = 1;
+                    c->OV = 1;
                     return;
                 }
             }
         }
-        if (!c.UN && !c.OV) {
-            if (c.ACC < c.PRE) {
-                c.DN = 0;
+        if (!c->UN && !c->OV) {
+            if (c->ACC < c->PRE) {
+                c->DN = 0;
             } else {
-                c.DN = 1;
+                c->DN = 1;
             }
         }
     } else {
-        c.CU = 0;
-        if (!c.UN && !c.OV) {
-            if (c.ACC < c.PRE) {
-                c.DN = 0;
+        c->CU = 0;
+        if (!c->UN && !c->OV) {
+            if (c->ACC < c->PRE) {
+                c->DN = 0;
             } else {
-                c.DN = 1;
+                c->DN = 1;
             }
         }
     }
