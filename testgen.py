@@ -34,7 +34,7 @@ from runglex import tokens
 from runglex import runglex
 from rungyacc import rungyacc
 
-tests = [
+test_cases = [
     {
         "rung" : "OTE(a);",
         "template" : 
@@ -96,6 +96,69 @@ tests = [
     assert(false);
 '''
     },
+    {
+        "rung" : "XIC(a)MOV(b,c)MOV(b,d);",
+        "template" : 
+'''
+    bool a = nondet_bool();
+    int b = nondet_int();
+    int c = nondet_int();
+    int d = nondet_int();
+    int old_c = c;
+    int old_d = d;
+    $rung
+    if (a) assert(b == c);
+    if (a) assert(b == d);
+    if (!a) assert (c == old_c);
+    if (!a) assert (d == old_d);
+    
+'''
+    },
+    {
+        "rung" : "XIC(a)TON(t,?,?);",
+        "template" : 
+'''
+    bool a;
+    bool reset = false;
+    int count = 0;
+    int iterations = 30;
+    
+    timer t = {
+        .EN = nondet_bool(),
+        .TT = nondet_bool(),
+        .DN = nondet_bool(),
+        .PRE = nondet_int(),
+        .ACC = nondet_int()
+    };
+    
+    assume(t.ACC >= 0);
+    assume(t.PRE < (iterations - 1) * get_scan_time());
+    assume(t.PRE > 0);
+    
+    for (int i = 0; i < iterations; ++i) {
+        a = nondet_bool();
+        
+        $rung
+        
+        if (!a) reset = true;
+        
+        if (a) ++count;
+        else count=0;
+        
+        if (reset) {
+            if (count > ceil((double)t.PRE / (double)get_scan_time()))
+                assert(t.DN);
+            else
+                assert(!t.DN);
+        }
+        
+        assert(a == t.EN);   
+        
+        assert(t.TT == (t.EN && !t.DN));
+    }
+    
+'''
+    },
     
 ]
 
@@ -109,6 +172,9 @@ def addTemplates(f, parameters):
         text = t.read()
         template = Template(text)
         f.write(template.substitute(parameters))
+        f.write('int nondet_int(){ int x; return x; }\n')
+        f.write('bool nondet_bool(){ bool x; return x; }\n\n')
+        f.write('void assume (bool e) { while (!e) ; }\n\n')
 
 ####################################################
 #
@@ -145,19 +211,21 @@ def main():
     
     with open('tests/tests.c', 'w') as f:
         addTemplates(f,parameters)
-        for i in range(0,len(tests)):
+        tests = []
+        for i in range(0,len(test_cases)):
             try:
-                rung = rungparser.parse(tests[i]['rung'])
+                rung = rungparser.parse(test_cases[i]['rung'])
                 f.write('void test_%d() {\n' % (i+1))
-                template = Template(tests[i]['template'])
+                template = Template(test_cases[i]['template'])
                 f.write(template.substitute({'rung': rung}))            
                 f.write('}\n\n')
+                tests.append(i)
             except SyntaxError:
                 pass
         
         f.write('int main() {\n')
-        for i in range(0,len(tests)):
-            f.write('    test_%d();\n' % (i+1))
+        for test in tests:
+            f.write('    test_%d();\n' % (test+1))
         f.write('}\n')
     
 if __name__== "__main__":

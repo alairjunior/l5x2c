@@ -31,6 +31,8 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
+
 
 /***************************************************
 /*             Stack control functions            */
