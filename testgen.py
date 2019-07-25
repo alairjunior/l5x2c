@@ -121,7 +121,7 @@ test_cases = [
     bool a;
     bool reset = false;
     int count = 0;
-    int iterations = 30;
+    int iterations = 10;
     
     timer t = {
         .EN = nondet_bool(),
