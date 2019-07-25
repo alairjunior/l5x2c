@@ -47,6 +47,16 @@ reserved = {
    'NEQ' : 'NEQ',
    'LEQ' : 'LEQ',
    'GRT' : 'GRT',
+   'COP' : 'COP',
+   'CPT' : 'CPT',
+   'ADD' : 'ADD',
+   'SUB' : 'SUB',
+   'CLR' : 'CLR',
+   'LIM' : 'LIM',
+   'DIV' : 'DIV',
+   'BTD' : 'BTD',
+   'JSR' : 'JSR',
+   'MSG' : 'MSG',
 }
 
 tokens = [
@@ -58,14 +68,24 @@ tokens = [
    'SEMICOLON',
    'TAG',
    'UNDEF_VAL',
+   'COMM_TAG',
+   'CPT_MINUS',
+   'CPT_PLUS',
+   'CPT_TIMES',
+   'CPT_DIV',
+   'NUMBER'
 ] + list(reserved.values())
 
 
 
 def runglex():
     # basic regular expressions for creating tokens
-    VARIABLE  = r'([a-zA-Z_] ( [a-zA-Z0-9_] )* (\[ ([0-9])* \])?)'
-    TAG       = r'(' + VARIABLE + '(\.' + VARIABLE + ')*)'
+    ID          = r'([a-zA-Z_] ( [a-zA-Z0-9_] )*)'
+    OBJ_ID      = r'(' + ID + '(\.' + ID + ')*)'
+    INDEX       = r'(\[ (([0-9])+ | (' + OBJ_ID + '))\])' 
+    OBJ_INDEX   = r'(' + OBJ_ID + '(' + INDEX + ')?)'
+    TAG         = r'(' + OBJ_INDEX + '(\.' + OBJ_INDEX + ')*(\.([0-9])+)?)'
+    COMM_TAG    = r'(' + ID + ':([0-9])+:' + ID + '\.' + TAG + ')'
 
     # Regular expression rules for simple tokens
     t_LPAR      = r'\('
@@ -91,7 +111,26 @@ def runglex():
     t_NEQ       = r'NEQ'
     t_LEQ       = r'LEQ'
     t_GRT       = r'GRT'
-    
+    t_COP       = r'COP'
+    t_CPT       = r'CPT'
+    t_ADD       = r'ADD'
+    t_SUB       = r'SUB'
+    t_CLR       = r'CLR'
+    t_LIM       = r'LIM'
+    t_DIV       = r'DIV'
+    t_BTD       = r'BTD'
+    t_JSR       = r'JSR'
+    t_MSG       = r'MSG'
+    t_CPT_MINUS = r'\-'
+    t_CPT_PLUS  = r'\+'
+    t_CPT_TIMES = r'\*'
+    t_CPT_DIV   = r'/'
+    t_NUMBER    = r'[0-9]*\.?[0-9]+([eE][\-\+]?[0-9]+)?'
+
+    @TOKEN(COMM_TAG)
+    def t_COMM_TAG(t):
+        return t
+
 
     @TOKEN(TAG)
     def t_TAG(t):
@@ -123,7 +162,7 @@ def main():
     # Build the lexer
     lexer = runglex()
     
-    data = "XIO(Timer_Rst_Comandos.DN)[XIC(Q3K26D1.TAB) XIC(Q3K26D1.CON) ,XIC(Q3K26D1.CAB) ]XIO(Q3K26D1.LAB)OTE(Q3K26D1.CAB);"
+    data = "T1.TIMER[0]"
     
     # Give the lexer some input
     lexer.input(data)

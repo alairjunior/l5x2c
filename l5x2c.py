@@ -172,7 +172,7 @@ def processRungs(f, routine):
     # Build the parser
     parser = rungyacc()
     for rung in routine:
-        f.write("    //%s\n" % (rung))
+        f.write("    // %s\n" % (rung))
         try:
             f.write("    %s\n" % (parser.parse(rung)))
         except SyntaxError as e:
@@ -187,7 +187,7 @@ def processRungs(f, routine):
 ###################################################
 def addFunction(f, program, routine, rungs):
     f.write("\n/* Function for Routine %s of program %s */\n" % (routine,program))
-    f.write("void %s_%s() {\n" % (program,routine))
+    f.write("void %s() {\n" % (routine))
     processRungs(f,rungs)
     f.write("}\n\n")
 
