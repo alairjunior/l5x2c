@@ -27,6 +27,7 @@
 #
 ################################################################################
 import os
+import logging
 import argparse
 from string import Template
 from runglex import tokens
@@ -70,6 +71,32 @@ tests = [
 
 '''
     },
+    {
+        "rung" : "XIC(a)[XIC(b)XIO(c),XIO(b)XIC(c)]XIC(d)OTE(e)OTE(f);",
+        "template" : 
+'''
+    bool a,b,c,d,e,f;
+    a = nondet_bool();
+    b = nondet_bool();
+    c = nondet_bool();
+    d = nondet_bool();
+    $rung
+    assert(e == (a && (b && !c || !b && c) && d));
+    assert(f == (a && (b && !c || !b && c) && d));
+
+'''
+    },
+    {
+        "rung" : "XIC(a)[XIC(b)XIO(c),XIO(b)XIC(c)][XIC(d)OTE(e),XIO(d)OTE(f)]OTE(g);",
+        "template" : 
+'''
+    // Rung:
+    // XIC(a)[XIC(b)XIO(c),XIO(b)XIC(c)][XIC(d)OTE(e),XIO(d)OTE(f)]OTE(g);
+    // is invalid and should not be generated. Rung parser is wrong!
+    assert(false);
+'''
+    },
+    
 ]
 
 ####################################################
@@ -104,6 +131,10 @@ def main():
         'scan_time': args['scan_time']
     }
     
+    # supress syntax error messages
+    logger = logging.getLogger('l5x2c')
+    logger.setLevel(logging.CRITICAL)
+    
     # build the lexer
     lexer = runglex()
     # Build the parser
@@ -115,11 +146,14 @@ def main():
     with open('tests/tests.c', 'w') as f:
         addTemplates(f,parameters)
         for i in range(0,len(tests)):
-            f.write('void test_%d() {\n' % (i+1))
-            rung = rungparser.parse(tests[i]['rung'])
-            template = Template(tests[i]['template'])
-            f.write(template.substitute({'rung': rung}))            
-            f.write('}\n\n')
+            try:
+                rung = rungparser.parse(tests[i]['rung'])
+                f.write('void test_%d() {\n' % (i+1))
+                template = Template(tests[i]['template'])
+                f.write(template.substitute({'rung': rung}))            
+                f.write('}\n\n')
+            except SyntaxError:
+                pass
         
         f.write('int main() {\n')
         for i in range(0,len(tests)):

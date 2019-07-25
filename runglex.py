@@ -27,7 +27,7 @@
 #
 ################################################################################
 import sys
-
+import logging
 from ply import lex
 from ply.lex import TOKEN
 
@@ -80,7 +80,9 @@ tokens = [
 
 
 
-def runglex():
+def runglex(debug=False):
+    log = logging.getLogger('l5x2c')
+        
     # basic regular expressions for creating tokens
     ID          = r'([a-zA-Z_] ( [a-zA-Z0-9_] )*)'
     OBJ_ID      = r'(' + ID + '(\.' + ID + ')*)'
@@ -150,10 +152,10 @@ def runglex():
 
     # Error handling rule
     def t_error(t):
-        print("Illegal character '%s'" % t.value[0])
+        log.error("Illegal character '%s'" % t.value[0])
         t.lexer.skip(1)
-    
-    return lex.lex()
+
+    return lex.lex(debug=debug,errorlog=log)
 
 ####################################################
 #

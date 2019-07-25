@@ -222,6 +222,7 @@ def dict2c(l5x, output, parameters):
 #
 ###################################################
 def main():
+    log = logging.getLogger('l5x2c')
     description = "Converts a Rockwell's L5X file into a C program"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("input")
@@ -240,7 +241,7 @@ def main():
         }
         dict2c(l5x_data, args['output'], parameters)
     except KeyError as e:
-        print("Key Error: " + str(e))
+        log.critical("Key Error: " + str(e))
         traceback.print_exc()
         
 if __name__== "__main__":

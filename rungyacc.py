@@ -75,7 +75,9 @@ from ply import yacc
 from runglex import tokens
 from runglex import runglex
 
-def rungyacc():
+def rungyacc(debug=False):
+    log = logging.getLogger('l5x2c')
+    
     ################################################################################
     #
     #   RUNG            :      INPUT_LIST OUTPUT_LIST
@@ -284,7 +286,7 @@ def rungyacc():
     
     def p_output_instruction_cop(p):
         'output_instruction : COP LPAR parameter COMMA parameter COMMA parameter RPAR'
-        logging.warning("Instruction COP is not supported. Instruction was ignored.")
+        log.warning("Instruction COP is not supported. Instruction was ignored.")
         p[0] = ''  
     
     def p_output_instruction_ton(p):
@@ -305,7 +307,7 @@ def rungyacc():
         
     def p_output_instruction_btd(p):
         'output_instruction : BTD LPAR parameter COMMA NUMBER COMMA parameter COMMA NUMBER COMMA NUMBER RPAR'
-        logging.warning("Instruction BTD is not supported. Instruction was ignored.")
+        log.warning("Instruction BTD is not supported. Instruction was ignored.")
         p[0] = ''
         
     def p_output_instruction_add(p):
@@ -330,7 +332,7 @@ def rungyacc():
         
     def p_output_instruction_msg(p):
         'output_instruction : MSG LPAR parameter RPAR'
-        logging.warning("Instruction MSG is not supported. Instruction was ignored.")
+        log.warning("Instruction MSG is not supported. Instruction was ignored.")
         p[0] = ''
         
     ################################################################################
@@ -405,11 +407,10 @@ def rungyacc():
     #
     ################################################################################
     def p_error(p):
-        print("Syntax error at '%s'" % repr(p))
+        log.error("Syntax error at '%s'" % repr(p))
         raise SyntaxError
         
-        
-    return yacc.yacc()
+    return yacc.yacc(debug=debug,errorlog=log)
 
 
 
