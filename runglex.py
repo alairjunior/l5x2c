@@ -26,6 +26,8 @@
 #    https://github.com/alairjunior/l5x2c
 #
 ################################################################################
+import sys
+
 from ply import lex
 from ply.lex import TOKEN
 
@@ -162,17 +164,13 @@ def main():
     # Build the lexer
     lexer = runglex()
     
-    data = "T1.TIMER[0]"
-    
-    # Give the lexer some input
-    lexer.input(data)
-
-    # Tokenize
+    lexer.input(sys.stdin.readline())
     while True:
         tok = lexer.token()
         if not tok: 
-            break      # No more input
+            break
         print(tok)
+
   
 if __name__== "__main__":
     main()

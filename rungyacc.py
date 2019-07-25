@@ -69,7 +69,7 @@
 #               OUTPUT_LIST : OUTPUT_INSTRUCTION | OUTPUT_BRANCH
 #
 ################################################################################
-
+import sys
 import logging
 from ply import yacc
 from runglex import tokens
@@ -189,7 +189,7 @@ def rungyacc():
     ################################################################################
     def p_output_branch_l(p):
         'output_branch : LBRA output_level RBRA'
-        p[0] = 'push(false);push(true);' + p[2] + 'or();and();'
+        p[0] = 'push(acc());' + p[2] + 'pop();'
 
     ################################################################################
     #
@@ -201,11 +201,11 @@ def rungyacc():
     ################################################################################
     def p_output_level_iol(p):
         'output_level : input_list output_list COMMA output_level'
-        p[0] = p[1] + p[2] + 'or();push(true);' + p[4]
+        p[0] = p[1] + p[2] + 'pop();push(acc());' + p[4]
 
     def p_output_level_ol(p):
         'output_level : output_list COMMA output_level'
-        p[0] = p[1] + 'or();push(true);' + p[3]
+        p[0] = p[1] + 'pop();push(acc());' + p[3]
 
     def p_output_level_io(p):
         'output_level : input_list output_list'
@@ -264,74 +264,74 @@ def rungyacc():
     ################################################################################
     def p_output_instruction_ote(p):
         'output_instruction : OTE LPAR parameter RPAR'
-        p[0] = p[3] + '=acc();pop();push(false);'
+        p[0] = p[3] + '=acc();'
         
     def p_output_instruction_otu(p):
         'output_instruction : OTU LPAR parameter RPAR'
-        p[0] = 'if(acc())' + p[3] + '=0;pop();push(false);'
+        p[0] = 'if(acc())' + p[3] + '=0;'
         
     def p_output_instruction_otl(p):
         'output_instruction : OTL LPAR parameter RPAR'
-        p[0] = 'if(acc())' + p[3] + '=1;pop();push(false);'
+        p[0] = 'if(acc())' + p[3] + '=1;'
     
     def p_output_instruction_res(p):
         'output_instruction : RES LPAR parameter RPAR'
-        p[0] = 'if(acc())' + p[3] + '.ACC=0;pop();push(false);'
+        p[0] = 'if(acc())' + p[3] + '.ACC=0;'
         
     def p_output_instruction_mov(p):
         'output_instruction : MOV LPAR parameter COMMA parameter RPAR'
-        p[0] = 'if(acc())' + p[5] + '=' + p[3] + ';pop();push(false);'
+        p[0] = 'if(acc())' + p[5] + '=' + p[3] + ';'
     
     def p_output_instruction_cop(p):
         'output_instruction : COP LPAR parameter COMMA parameter COMMA parameter RPAR'
         logging.warning("Instruction COP is not supported. Instruction was ignored.")
-        p[0] = 'pop();push(false);'  
+        p[0] = ''  
     
     def p_output_instruction_ton(p):
         'output_instruction : TON LPAR parameter COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'
-        p[0] = 'ton(acc(), &' + p[3] + ');pop();push(false);'
+        p[0] = 'ton(acc(), &' + p[3] + ');'
     
     def p_output_instruction_tof(p):
         'output_instruction : TOF LPAR parameter COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'
-        p[0] = 'tof(acc(), &' + p[3] + ');pop();push(false);'
+        p[0] = 'tof(acc(), &' + p[3] + ');'
         
     def p_output_instruction_ctu(p):
         'output_instruction : CTU LPAR parameter COMMA UNDEF_VAL COMMA UNDEF_VAL RPAR'
-        p[0] = 'ctu(acc(), &' + p[3] + ');pop();push(false);'
+        p[0] = 'ctu(acc(), &' + p[3] + ');'
         
     def p_output_instruction_jsr(p):
         'output_instruction : JSR LPAR parameter COMMA NUMBER RPAR'
-        p[0] = 'if(acc())%s();pop();push(false);' % (p[3])
+        p[0] = 'if(acc())%s();' % (p[3])
         
     def p_output_instruction_btd(p):
         'output_instruction : BTD LPAR parameter COMMA NUMBER COMMA parameter COMMA NUMBER COMMA NUMBER RPAR'
         logging.warning("Instruction BTD is not supported. Instruction was ignored.")
-        p[0] = 'pop();push(false);'
+        p[0] = ''
         
     def p_output_instruction_add(p):
         'output_instruction : ADD LPAR parameter COMMA parameter COMMA parameter RPAR'
-        p[0] = 'if(acc()){%s=%s+%s;};pop();push(false);' % (p[7],p[3],p[5])
+        p[0] = 'if(acc()){%s=%s+%s;};' % (p[7],p[3],p[5])
         
     def p_output_instruction_sub(p):
         'output_instruction : SUB LPAR parameter COMMA parameter COMMA parameter RPAR'
-        p[0] = 'if(acc()){%s=%s-%s;};pop();push(false);' % (p[7],p[3],p[5])
+        p[0] = 'if(acc()){%s=%s-%s;};' % (p[7],p[3],p[5])
     
     def p_output_instruction_clr(p):
         'output_instruction : CLR LPAR parameter RPAR'
-        p[0] = 'if(acc()){%s=0;};pop();push(false);' % (p[3])
+        p[0] = 'if(acc()){%s=0;};' % (p[3])
     
     def p_output_instruction_div(p):
         'output_instruction : DIV LPAR parameter COMMA parameter COMMA parameter RPAR'
-        p[0] = 'if(acc()){%s=%s/%s;};pop();push(false);' % (p[7],p[3],p[5])
+        p[0] = 'if(acc()){%s=%s/%s;};' % (p[7],p[3],p[5])
         
     def p_output_instruction_cpt(p):
         'output_instruction : CPT LPAR parameter COMMA cpt_expression RPAR'
-        p[0] = 'if(acc()){%s=%s;};pop();push(false);' % (p[3],p[5])
+        p[0] = 'if(acc()){%s=%s;};' % (p[3],p[5])
         
     def p_output_instruction_msg(p):
         'output_instruction : MSG LPAR parameter RPAR'
         logging.warning("Instruction MSG is not supported. Instruction was ignored.")
-        p[0] = 'pop();push(false);'
+        p[0] = ''
         
     ################################################################################
     #
@@ -425,17 +425,7 @@ def main():
     # Build the parser
     parser = rungyacc()
     
-    #data = "XIO(A)[XIC(B) XIC(C) ,XIC(D) ]XIO(E)OTE(F);"
-    data = "XIO(A)[XIC(B) XIC(C) ,XIC(D) ]XIO(E)[[XIC(F),XIC(G)]OTE(H),XIC(I)OTE(J)];"
-    #data = "XIO(Timer_Rst_Comandos.DN)[XIC(Q3K26D1.TAB) XIC(Q3K26D1.CON) ,XIC(Q3K26D1.CAB) ]XIO(Q3K26D1.LAB)OTE(Q3K26D1.CAB);"
-    #data = "XIO(Timer_Rst_Comandos.DN)[XIC(Q3K26D1.TAB) XIC(Q3K26D1.CON) ,XIC(Q3K26D1.CAB) ]XIO(Q3K26D1.LAB)[[XIC(C),XIC(D)]OTE(Q3K26D1.CAB),XIC(A)OTE(B)];"
-    #data = "XIO(C)XIC(B)OTE(A);"
-    
-    #data = "[OTE(H),OTE(J)];"
-    
-    print(data)
-    # Give the parser some input
-    result = parser.parse(data)
+    result = parser.parse(sys.stdin.readline())
     print(result)
     
 if __name__== "__main__":
