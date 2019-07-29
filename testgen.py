@@ -159,6 +159,51 @@ test_cases = [
     
 '''
     },
+    {
+        "rung" : "XIC(a)TOF(t,?,?);",
+        "template" : 
+'''
+    bool a;
+    bool reset = false;
+    int count = 0;
+    int iterations = 10;
+    
+    timer t = {
+        .EN = nondet_bool(),
+        .TT = nondet_bool(),
+        .DN = nondet_bool(),
+        .PRE = nondet_int(),
+        .ACC = nondet_int()
+    };
+    
+    assume(t.ACC >= 0);
+    assume(t.PRE < (iterations - 1) * get_scan_time());
+    assume(t.PRE > 0);
+    
+    for (int i = 0; i < iterations; ++i) {
+        a = nondet_bool();
+        
+        $rung
+        
+        if (a) reset = true;
+        
+        if (!a) ++count;
+        else count=0;
+        
+        if (reset) {
+            if (count > ceil((double)t.PRE / (double)get_scan_time()))
+                assert(!t.DN);
+            else
+                assert(t.DN);
+        }
+        
+        assert(a == t.EN);   
+        
+        assert(t.TT == (!t.EN && t.DN));
+    }
+    
+'''
+    },
     
 ]
 
