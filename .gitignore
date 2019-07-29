@@ -4,3 +4,4 @@ ihm
 *.out
 parsetab.py
 __pycache__
+env
