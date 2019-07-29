@@ -1,0 +1,185 @@
+/*******************************************************************************
+* Copyright (c) 2019 Alair Dias Junior
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*
+*
+* This file is part of l5x2c. To know more about it, acccess:
+*    https://github.com/alairjunior/l5x2c
+*
+*******************************************************************************/
+
+/* This file was generated automatically by l5x2c */
+/*     https://github.com/alairjunior/l5x2c       */
+
+#include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <math.h>
+
+
+/***************************************************
+/*             Stack control functions            */
+/**************************************************/
+bool stack[${stack_size}] = {false};
+int top = 0;
+bool acc() {return stack[top-1];}
+void push(bool x) {stack[top++]=x;}
+bool pop() {return stack[--top];}
+void and() {bool a = pop(); bool b = pop(); push(a && b);}
+void or() {bool a = pop(); bool b = pop(); push(a || b);}
+void clear(){top=0;}
+
+/***************************************************
+/*                Model functions                 */
+/**************************************************/
+int get_scan_time(){return ${scan_time};}
+
+/***************************************************
+/*                Timer Structure                 */
+/**************************************************/
+typedef struct timer {
+    bool EN;
+    bool TT;
+    bool DN;
+    long int PRE;
+    long int ACC;
+} timer;
+
+/***************************************************
+/*                Timer Functions                 */
+/**************************************************/
+/* Based on Rockwell's manual */
+void ton(bool acc, timer *t) {
+    if (!acc) {
+        t->DN = false;
+        t->ACC = 0;
+        t->TT = false;
+        t->EN = false;
+    } else {
+        t->TT = true;
+        if(t->DN) {
+            t->TT = false;
+            t->EN = true;
+            return;
+        } else if (!t->EN) {
+            t->EN = true;
+        } else {
+            t->ACC += get_scan_time();
+            if (t->ACC < 0) {
+                t->ACC = 2147483647;
+                t->TT = false;
+                t->DN = true;
+                t->EN = true;
+            } else if (t->ACC >= t->PRE) {
+                t->TT = false;
+                t->DN = true;
+                t->EN = true;
+            }
+        }
+    }
+}
+
+/* Based on Rockwell's manual */
+void tof(bool acc, timer *t) {
+    if (acc) {
+        t->DN = true;
+        t->ACC = 0;
+        t->TT = false;
+        t->EN = true;
+    } else {
+        t->TT = true;
+        if(!t->DN) {
+            t->TT = false;
+            t->EN = false;
+            return;
+        } else if (t->EN) {
+            t->EN = false;
+        } else {
+            t->ACC += get_scan_time();
+            if (t->ACC < 0) {
+                t->ACC = 2147483647;
+                t->TT = false;
+                t->DN = false;
+                t->EN = false;
+            } else if (t->ACC >= t->PRE) {
+                t->TT = false;
+                t->DN = false;
+                t->EN = false;
+            }
+        }
+    }
+}
+
+/***************************************************
+/*              Counter Structure                 */
+/**************************************************/
+typedef struct counter {
+    bool CD;
+    bool CU;
+    bool DN;
+    bool OV;
+    bool UN;
+    long int PRE;
+    long int ACC;
+} counter;
+
+
+/***************************************************
+/*              Counter Function                  */
+/**************************************************/
+/* Based on Rockwell's manual */
+void ctu(int acc, counter *c) {
+    bool ov = false;
+    if(acc) {
+        if (!c->CU) {
+            c->CU = true;
+            if (c->ACC == 2147483647) {
+               ov = true; 
+            } 
+            c->ACC += 1;
+            if (ov) {
+                if (c->UN) {
+                    c->UN = false;
+                    c->OV = false;
+                } else {
+                    c->OV = true;
+                    return;
+                }
+            }
+        }
+        if (!c->UN && !c->OV) {
+            if (c->ACC < c->PRE) {
+                c->DN = false;
+            } else {
+                c->DN = true;
+            }
+        }
+    } else {
+        c->CU = false;
+        if (!c->UN && !c->OV) {
+            if (c->ACC < c->PRE) {
+                c->DN = false;
+            } else {
+                c->DN = true;
+            }
+        }
+    }
+}
+
