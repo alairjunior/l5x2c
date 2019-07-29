@@ -33,7 +33,7 @@ import traceback
 from string import Template
 from runglex import runglex
 from rungyacc import rungyacc
-from l5xparser import parse_l5x
+from l5xparser import l5xparser
 
 ####################################################
 #
@@ -234,7 +234,8 @@ def main():
     
     args = vars(parser.parse_args())
     try:
-        l5x_data = parse_l5x(args['input'])
+        l5x = l5xparser()
+        l5x_data = l5x.parse(args['input'])
         parameters = {
             'stack_size': args['stack_size'],
             'scan_time': args['scan_time']
