@@ -76,11 +76,24 @@
 </Text>
 </Rung>
 <Rung Number="1" Type="N">
+<Comment>
+<![CDATA[
+<CAFTER! assert( D == A ); !>
+<CBEFORE! A = nondet_bool(); C = nondet_bool(); D = nondet_bool(); !>
+]]>
+</Comment>
 <Text>
 <![CDATA[XIC(A)[,XIO(C)]OTE(D);]]>
 </Text>
 </Rung>
 <Rung Number="2" Type="N">
+<Comment>
+<![CDATA[
+<CBEFORE! A = nondet_bool(); C = nondet_bool(); D = nondet_bool(); !>
+<CAFTER! assert( D == (A && !C) ); !>
+]]>
+
+</Comment>
 <Text>
 <![CDATA[XIC(A)[,]OTE(D);]]>
 </Text>

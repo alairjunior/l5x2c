@@ -26,6 +26,7 @@
 #    https://github.com/alairjunior/l5x2c
 #
 ################################################################################
+import re
 import sys
 import logging
 import argparse
@@ -174,9 +175,25 @@ def processRungs(f, routine):
     for rung in routine:
         number = int(rung['number'])
         logic = rung['logic']
+        
+        if 'comment' in rung:
+            comment = rung['comment']
+            start = "<CBEFORE!"
+            end = "!>"
+            cbefore = re.search('%s(.*)%s' % (start, end), comment)
+            start = "<CAFTER!"
+            cafter = re.search('%s(.*)%s' % (start, end), comment)
+        else:
+            cbefore = None
+            cafter = None
+            
         f.write("    // (Rung %d) %s\n" % (number, logic))
         try:
+            if cbefore is not None:
+                f.write("    %s\n" % (cbefore.group(1).strip()))
             f.write("    %s\n" % (parser.parse(logic)))
+            if cafter is not None:
+                f.write("    %s\n" % (cafter.group(1).strip()))
         except SyntaxError as e:
             f.write("//    Syntax Error")
         finally:
