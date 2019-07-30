@@ -172,9 +172,11 @@ def processRungs(f, routine):
     # Build the parser
     parser = rungyacc()
     for rung in routine:
-        f.write("    // %s\n" % (rung))
+        number = int(rung['number'])
+        logic = rung['logic']
+        f.write("    // (Rung %d) %s\n" % (number, logic))
         try:
-            f.write("    %s\n" % (parser.parse(rung)))
+            f.write("    %s\n" % (parser.parse(logic)))
         except SyntaxError as e:
             f.write("//    Syntax Error")
         finally:

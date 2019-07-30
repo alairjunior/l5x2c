@@ -120,8 +120,16 @@ class l5xparser():
                             if (routine.getAttribute("Name") == routine_name):
                                 for rll in routine.getElementsByTagName("RLLContent"):
                                     for rung in rll.getElementsByTagName("Rung"):
+                                        rung_data = {}
+                                        rung_data['number'] = rung.getAttribute('Number');
                                         for text in rung.getElementsByTagName("Text"):
-                                            rung_list.append(text.firstChild.wholeText.strip())
+                                            rung_data['logic'] = text.firstChild.wholeText.strip()
+                                            break;
+                                        for comment in rung.getElementsByTagName("Comment"):
+                                            rung_data['comment'] = comment.firstChild.wholeText.strip()
+                                            break;
+                                        rung_list.append(rung_data)
+                                        
         
         return rung_list
 
