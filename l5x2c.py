@@ -278,6 +278,11 @@ def dict2c(l5x, output, parameters):
                 if program in l5x['tags']['Programs']:
                     addTags(f, l5x['tags']['Programs'][program])
             routines = programs[program]['routines']
+            f.write('\n/***************************************************\n')
+            f.write('*               Forward Declarations               *\n')
+            f.write('***************************************************/\n')
+            for routine in routines:
+                f.write("void routine_%s();\n" % (routine))
             for routine in routines:
                 addFunction(f, program, routine, routines[routine]['rungs'])
         
