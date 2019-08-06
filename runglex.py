@@ -89,7 +89,7 @@ def runglex(debug=False):
     INDEX       = r'(\[ (([0-9])+ | (' + OBJ_ID + '))\])' 
     OBJ_INDEX   = r'(' + OBJ_ID + '(' + INDEX + ')?)'
     TAG         = r'(' + OBJ_INDEX + '(\.' + OBJ_INDEX + ')*(\.([0-9])+)?)'
-    COMM_TAG    = r'(' + ID + ':([0-9])+:' + ID + '\.' + TAG + ')'
+    MODULE_TAG  = r'(' + ID + ':([0-9])+:' + '[IO]' + '\.' + TAG + ')'
 
     # Regular expression rules for simple tokens
     t_LPAR      = r'\('
@@ -131,8 +131,8 @@ def runglex(debug=False):
     t_CPT_DIV   = r'/'
     t_NUMBER    = r'[0-9]*\.?[0-9]+([eE][\-\+]?[0-9]+)?'
 
-    @TOKEN(COMM_TAG)
-    def t_COMM_TAG(t):
+    @TOKEN(MODULE_TAG)
+    def t_MODULE_TAG(t):
         return t
 
 

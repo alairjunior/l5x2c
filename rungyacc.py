@@ -344,8 +344,8 @@ def rungyacc(debug=False):
         'parameter : TAG'
         p[0] = p[1]
     
-    def p_parameter_comm_tag(p):
-        'parameter : COMM_TAG'
+    def p_parameter_module_tag(p):
+        'parameter : MODULE_TAG'
         p[0] = p[1]
         
     def p_parameter_number(p):
