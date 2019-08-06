@@ -143,6 +143,19 @@ def addDataTypes(f, datatypes):
                 unprocessed.remove(name)
                 break
 
+
+####################################################
+#
+# DECODE VALUE STRING
+#
+###################################################
+def decode_value_string(string):
+    if '#' in string:
+        data = string.replace('_','').split('#')
+        return hex(int(data[1], int(data[0])))
+    else:
+        return string
+
 ####################################################
 #
 # GET INITIAL VALUE STRING
@@ -150,7 +163,7 @@ def addDataTypes(f, datatypes):
 ###################################################
 def get_initial_value(node):
     if node['type'] == 'value':
-        return '=' + node['data']['data']
+        return '=' + decode_value_string(node['data']['data'])
     elif node['type'] == 'array':
         result = " = { " 
         for index in node['data']['data']:
@@ -240,7 +253,7 @@ def processRungs(f, routine):
 ###################################################
 def addFunction(f, program, routine, rungs):
     f.write("\n/* Function for Routine %s of program %s */\n" % (routine,program))
-    f.write("void %s() {\n" % (routine))
+    f.write("void routine_%s() {\n" % (routine))
     processRungs(f,rungs)
     f.write("}\n\n")
 

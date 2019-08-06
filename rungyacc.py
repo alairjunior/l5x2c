@@ -303,7 +303,7 @@ def rungyacc(debug=False):
         
     def p_output_instruction_jsr(p):
         'output_instruction : JSR LPAR parameter COMMA NUMBER RPAR'
-        p[0] = 'if(acc())%s();' % (p[3])
+        p[0] = 'if(acc())routine_%s();' % (p[3])
         
     def p_output_instruction_btd(p):
         'output_instruction : BTD LPAR parameter COMMA NUMBER COMMA parameter COMMA NUMBER COMMA NUMBER RPAR'
@@ -395,6 +395,10 @@ def rungyacc(debug=False):
     
     def p_cpt_expression_number(p):
         'cpt_expression : NUMBER'
+        p[0] = p[1]
+    
+    def p_cpt_expression_neg_number(p):
+        'cpt_expression : CPT_MINUS NUMBER'
         p[0] = p[1]
     
     def p_cpt_expression_parameter(p):
