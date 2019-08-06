@@ -166,6 +166,8 @@ class l5xparser():
                         entry = {}
                         entry['type'] = 'array'
                         entry['data'] = self.build_array_member(content)
+                    else:
+                        logging.warning("Cannot process DataType %s" % (content.tagName))
         return entry
         
 
@@ -305,11 +307,22 @@ class l5xparser():
                     l5x_datatypes[datatype_name]['members'] = {}
                     members_dict = l5x_datatypes[datatype_name]['members']
                     for member in members.getElementsByTagName('Member'):
-                        members_dict[member.getAttribute('Name')] = {
-                            'type': member.getAttribute('DataType'),
-                            'dimension': member.getAttribute('Dimension'),
-                            'radix': member.getAttribute('Radix'),
-                        }
+                        target = member.getAttribute('Target')
+                        if (target == ''): 
+                            members_dict[member.getAttribute('Name')] = {
+                                'type': member.getAttribute('DataType'),
+                                'dimension': member.getAttribute('Dimension'),
+                                'radix': member.getAttribute('Radix'),
+                                'fields' : []
+                            }
+                        else :
+                            field = {
+                                'Name': member.getAttribute('Name'),
+                                'type': member.getAttribute('DataType'),
+                                'dimension': member.getAttribute('Dimension'),
+                                'radix': member.getAttribute('Radix'),
+                            }
+                            members_dict[target]['fields'].append(field)
                 
                 for dependencies in datatype.getElementsByTagName('Dependencies'):
                     l5x_datatypes[datatype_name]['dependencies'] = {}

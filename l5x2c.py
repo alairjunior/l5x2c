@@ -86,11 +86,35 @@ def addDataType(f, name, datatype):
             dimension = 0
             if 'dimension' in datatype['members'][field]:
                 dimension = int(datatype['members'][field]['dimension'])
-            field_type = datatype_translation_lut.get(typename, typename)
-            if dimension > 0:
-                f.write('\t%s %s[%d];\n' % (field_type, field, dimension))
-            else:
-                f.write('\t%s %s;\n' % (field_type, field))
+            
+            inner_fields = datatype['members'][field]['fields']
+            
+            if len(inner_fields) > 0 :
+                if dimension > 0:
+                    logging.error("Cannot declare inner field for array. %s.%s" % (name,field))
+                    raise Exception("Cannot declare inner field for array. %s.%s" % (name,field))
+                
+                field_type = datatype_translation_lut.get(typename, typename + '_t')
+                f.write('\tunion {\n')
+                f.write('\t\t%s %s;\n' % (field_type, field))
+                f.write('\t\tstruct {\n')
+                for inner in inner_fields:
+                    bitfield = ': 1' if inner['type'] == 'BIT' else ''
+                    field_type = datatype_translation_lut.get(inner['type'], inner['type'] + '_t')
+                    f.write('\t\t\t%s %s%s;\n' % (field_type, inner['Name'], bitfield))
+                f.write('\t\t};\n')
+                f.write('\t};\n')
+                
+            else :
+                bitfield = ': 1' if typename == 'BIT' else ''
+                
+                field_type = datatype_translation_lut.get(typename, typename + '_t')
+                if dimension > 0:
+                    f.write('\t%s %s[%d];\n' % (field_type, field, dimension))
+                else:
+                    f.write('\t%s %s%s;\n' % (field_type, field, bitfield))
+                
+                                
         f.write('} %s_t;\n' % (name))
 
 ####################################################
@@ -159,8 +183,18 @@ def addTags(f, tags):
     for tag in tags:
         content = tags[tag]
         datatype = content['data']['type']
+        if 'dimensions' in content['data']:
+            dimensions = int(content['data']['dimensions'])
+        else:
+            dimensions = 0
+        
+        if dimensions > 0:
+            dimensionstr = "[%d]" % dimensions
+        else:
+            dimensionstr = ''
+            
         typename = datatype_translation_lut.get(datatype, datatype + '_t')
-        f.write('%s %s%s;\n\n' % (typename, tag, get_initial_value(content)))
+        f.write('%s %s%s%s;\n\n' % (typename, tag, dimensionstr, get_initial_value(content)))
 
 ####################################################
 #
@@ -250,6 +284,7 @@ def main():
                             help="Stack size for the stack machine")
     parser.add_argument('-st', '--scan_time', type=int, default=100,
                             help="Scan time for the PLC model")
+    
     
     args = vars(parser.parse_args())
     try:
