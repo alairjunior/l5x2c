@@ -70,7 +70,7 @@ tokens = [
    'SEMICOLON',
    'TAG',
    'UNDEF_VAL',
-   'COMM_TAG',
+   'MODULE_TAG',
    'CPT_MINUS',
    'CPT_PLUS',
    'CPT_TIMES',
