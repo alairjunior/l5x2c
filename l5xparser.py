@@ -68,7 +68,10 @@ class l5xparser():
         program_list = []
         for programs in dom.getElementsByTagName("Programs"):
             for program in programs.getElementsByTagName("Program"):
-                program_list.append(program.getAttribute("Name"))
+                program_list.append({
+                    'name': program.getAttribute("Name"),
+                    'main_routine': program.getAttribute("MainRoutineName")
+                })
         
         return program_list
 
@@ -346,15 +349,18 @@ class l5xparser():
         l5x_data['tags'] = self.parse_l5x_tags(filename)
         l5x_data['datatypes'] = self.parse_l5x_datatypes(filename)
         l5x_data['programs'] = {}
-        for program_name in self.list_programs(args):
+        programs = l5x_data['programs']
+        for program_data in self.list_programs(args):
+            program_name = program_data['name']
             args['program'] = program_name
-            programs = l5x_data['programs']
-            programs[program_name] = {}
+            programs[program_name] = {
+                'main_routine': program_data['main_routine']
+            }
             program = programs[program_name]
             program['routines'] = {}
+            routines = program['routines']
             for routine_name in self.list_routines(args):
                 args['routine'] = routine_name
-                routines = program['routines']
                 routines[routine_name] = {}
                 routine = routines[routine_name]
                 routine['rungs'] = self.list_rungs(args)

@@ -354,7 +354,7 @@ def rungyacc(debug=False):
         
     def p_parameter_neg_number(p):
         'parameter : CPT_MINUS NUMBER'
-        p[0] = p[1]
+        p[0] = p[1] + p[2]
         
     ################################################################################
     #

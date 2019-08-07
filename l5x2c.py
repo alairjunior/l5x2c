@@ -227,9 +227,9 @@ def processRungs(f, routine):
             comment = rung['comment']
             start = "<CBEFORE!"
             end = "!>"
-            cbefore = re.search('%s(.*)%s' % (start, end), comment)
+            cbefore = re.search('%s(.*)%s' % (start, end), comment, re.DOTALL)
             start = "<CAFTER!"
-            cafter = re.search('%s(.*)%s' % (start, end), comment)
+            cafter = re.search('%s(.*)%s' % (start, end), comment, re.DOTALL)
         else:
             cbefore = None
             cafter = None
@@ -272,7 +272,10 @@ def dict2c(l5x, output, parameters):
         f.write('*               Program Definitions                *\n')
         f.write('***************************************************/\n')
         programs = l5x['programs']
+        main_routines = []
         for program in programs:
+            if len(programs[program]['main_routine']) > 0:
+                main_routines.append(programs[program]['main_routine'])
             f.write("\n/* Program %s */\n" % (program))
             if 'Programs' in l5x['tags']:
                 if program in l5x['tags']['Programs']:
@@ -285,7 +288,16 @@ def dict2c(l5x, output, parameters):
                 f.write("void routine_%s();\n" % (routine))
             for routine in routines:
                 addFunction(f, program, routine, routines[routine]['rungs'])
-        
+                
+        f.write('\n/***************************************************\n')
+        f.write('*                   Main Loop                      *\n')
+        f.write('***************************************************/\n')
+        f.write('void main() {\n')
+        f.write('\twhile(true) {\n')
+        for routine in main_routines:
+            f.write("\t\troutine_%s();\n" % (routine))
+        f.write('\t}\n')
+        f.write('}\n')
 
 ####################################################
 #
