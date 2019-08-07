@@ -52,6 +52,12 @@ void clear(){top=0;}
 int get_scan_time(){return ${scan_time};}
 
 /***************************************************
+/*         Verification functions                 */
+/**************************************************/
+bool nondet_bool() { bool x; return x; }
+int nondet_int() { int x; return x; }
+
+/***************************************************
 /*                Timer Structure                 */
 /**************************************************/
 typedef struct timer {
