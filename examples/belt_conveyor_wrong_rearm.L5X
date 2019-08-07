@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RSLogix5000Content SchemaRevision="1.0" SoftwareRevision="20.01" TargetName="DISJ_BT_QDM3" TargetType="Routine" TargetSubType="RLL" ContainsContext="true" Owner="IHM" ExportDate="Thu Feb 22 15:54:34 2018" ExportOptions="References DecoratedData Context Dependencies ForceProtectedEncoding AllProjDocTrans">
+<Controller Use="Context" Name="SE_VAZANTE">
+<DataTypes Use="Context">
+<DataType Name="Conveyor_Fail_Type" Family="NoFamily" Class="User">
+<Members>
+<Member Name="Failures" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="Contactor_Failure" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="Failures" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Contactor Failure]]>
+</Description>
+</Member>
+<Member Name="Break_Jammed" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="Failures" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Break Jammed]]>
+</Description>
+</Member>
+<Member Name="Overload" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="Failures" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor Overload]]>
+</Description>
+</Member>
+<Member Name="Emergency_Stop" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="Failures" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Emergency Stop]]>
+</Description>
+</Member>
+<Member Name="Misalignment" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="Failures" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Belt Misalignment]]>
+</Description>
+</Member>
+</Members>
+</DataType>
+</DataTypes>
+<Tags Use="Context">
+<Tag Name="T_Contactor_Feedback" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Feedback Time of Motor's Contactor]]>
+</Description>
+<Data>DA 2D 04 C0 88 13 00 00 0D 0F 00 00</Data>
+<Data Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="2000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</Data>
+</Tag>
+<Tag Name="T_Break_Failure" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Time to Conveyor's Break Feedback]]>
+</Description>
+<Data>DA 2D 04 C0 88 13 00 00 0D 0F 00 00</Data>
+<Data Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="3000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</Data>
+</Tag>
+<Tag Name="T_Horn" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Conveyor's Horn]]>
+</Description>
+<Data>DA 2D 04 C0 88 13 00 00 0D 0F 00 00</Data>
+<Data Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="5000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</Data>
+</Tag>
+<Tag Name="T_Break" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Delay to open Conveyor's Break]]>
+</Description>
+<Data>DA 2D 04 C0 88 13 00 00 0D 0F 00 00</Data>
+<Data Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="2000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</Data>
+</Tag>
+<Tag Name="Start" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Start Input]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Stop" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Stop Input]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Rearm" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Rearm Input]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Emergency" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Emergency Input]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Contactor_Feedback" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Contactor Feedback]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Misalignment" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Misalignment Input]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Overload" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Overload Input]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Break_Open" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Break Open Input]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Contactor" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Contactor Output]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Horn" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Horn Output]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Open_Break" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Open Break Output]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Started" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Started State]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Failure_Summary" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Failure Summary]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Ready_to_Start" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Ready to Start Summary]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Ready_to_Run" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Motor's Ready to Run Summary]]>
+</Description>
+<Data>00</Data>
+<Data Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</Data>
+</Tag>
+<Tag Name="Conveyor_Failures" TagType="Base" DataType="Conveyor_Fail_Type" Constant="false" ExternalAccess="Read/Write">
+<Data>00 00</Data>
+<Data Format="Decorated">
+<Structure DataType="Conveyor_Fail_Type">
+<DataValueMember Name="Failures" DataType="SINT" Value="0"/>
+<DataValueMember Name="Contactor_Failure" DataType="BOOL" Value="0"/>
+<DataValueMember Name="Break_Jammed" DataType="BOOL" Value="0"/>
+<DataValueMember Name="Overload" DataType="BOOL" Value="0"/>
+<DataValueMember Name="Emergency_Stop" DataType="BOOL" Value="0"/>
+<DataValueMember Name="Misalignment" DataType="BOOL" Value="0"/>
+</Structure>
+</Data>
+</Tag>
+</Tags>
+<Programs Use="Context">
+<Program Use="Context" Name="MainProgram" MainRoutineName="Conveyor1">
+<Routines Use="Context">
+<Routine Use="Target" Name="Conveyor1" Type="RLL">
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment>
+<![CDATA[
+<CBEFORE! Start=nondet_bool();Stop=nondet_bool();Rearm=nondet_bool();Emergency=nondet_bool();Contactor_Feedback=nondet_bool();Misalignment=nondet_bool();Overload=nondet_bool();Break_Open=nondet_bool(); !>
+]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Contactor)XIO(Contactor_Feedback)[TON(T_Contactor_Feedback,?,?),XIC(T_Contactor_Feedback.DN)OTU(Conveyor_Failures.Contactor_Failure)];]]>
+</Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment>
+</Comment>
+<Text>
+<![CDATA[XIC(Open_Break)XIO(Break_Open)[TON(T_Break_Failure,?,?),XIC(T_Break_Failure.DN)OTU(Conveyor_Failures.Break_Jammed)];]]>
+</Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment>
+</Comment>
+<Text>
+<![CDATA[XIO(Overload)OTU(Conveyor_Failures.Overload);]]>
+</Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment>
+</Comment>
+<Text>
+<![CDATA[XIO(Emergency)OTU(Conveyor_Failures.Emergency_Stop);]]>
+</Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment>
+</Comment>
+<Text>
+<![CDATA[XIO(Misalignment)OTU(Conveyor_Failures.Misalignment);]]>
+</Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Comment>
+</Comment>
+<Text>
+<![CDATA[XIC(Rearm)MOV(-1,Conveyor_Failures.Failures);]]>
+</Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Comment>
+</Comment>
+<Text>
+<![CDATA[XIC(Conveyor_Failures.Emergency_Stop)XIC(Conveyor_Failures.Misalignment)XIC(Conveyor_Failures.Overload)XIC(Conveyor_Failures.Break_Jammed)XIC(Conveyor_Failures.Contactor_Failure)OTE(Failure_Summary);]]>
+</Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Comment>
+</Comment>
+<Text>
+<![CDATA[OTE(Ready_to_Start);]]>
+</Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Comment>
+</Comment>
+<Text>
+<![CDATA[OTE(Ready_to_Run);]]>
+</Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Comment>
+<![CDATA[
+<CAFTER! 
+    if(!Overload) assert(!Started); 
+    if(!Emergency) assert(!Started); 
+    if(!Misalignment) assert(!Started);
+    if(!Overload) assert(!Contactor); 
+    if(!Emergency) assert(!Contactor); 
+    if(!Misalignment) assert(!Contactor);  
+!>
+]]>
+</Comment>
+<Text>
+<![CDATA[[XIC(Start),XIC(Started)]XIC(Stop)XIC(Failure_Summary)XIC(Ready_to_Start)[OTE(Started),XIC(Ready_to_Run)[TON(T_Horn,?,?),XIO(T_Horn.DN)OTE(Horn),XIC(T_Horn.DN)[OTE(Contactor),TON(T_Break,?,?),XIC(T_Break.DN)OTE(Open_Break)]]];]]>
+</Text>
+</Rung>
+</RLLContent>
+</Routine>
+</Routines>
+</Program>
+</Programs>
+</Controller>
+</RSLogix5000Content>
